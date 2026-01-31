@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Audio Data (large files)
+ml-stuttering-events-dataset/clips/
+ml-stuttering-events-dataset/wavs/
+*.wav
+*.mp3
+*.m4a
+
+# Trained Models (if saved)
+*.pkl
+*.joblib
+*.h5
+*.pt
+*.pth
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# CSV files with sensitive data (optional - uncomment if needed)
+# *.csv

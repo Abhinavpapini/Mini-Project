@@ -1,0 +1,7 @@
+1.SVM F1-score (MFCC, Clean vs Block):  0.7505
+
+2.CQCC + SVM F1-score:0.7365 
+
+3.SFFCC + SVM F1-score: 0.7394
+
+4.ZTWCC + SVM F1-score:  0.7288
