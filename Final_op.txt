@@ -1,0 +1,440 @@
+================================================================================
+                    SVM BLOCK CLASSIFICATION RESULTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. SVM + CQCC (Constant-Q Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Block Samples: 8,874
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 11.76 minutes
+
+Results:
+  - Final F1-Score: 0.7481
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+2. SVM + MFCC (Mel-Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Pure Clean Samples: 4,090
+  - Block Samples: 8,874
+  - Feature Dimensions: 78
+  - Feature Extraction Time: ~1 minute
+
+Results:
+  - Train F1-Score: 0.8559
+  - Test F1-Score: 0.8120
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+3. SVM + SFFCC (Spectral Flux-based Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Block Samples: 8,874
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~45 seconds
+
+Results:
+  - Train F1-Score: 0.8611
+  - Test F1-Score: 0.7469
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+4. SVM + ZTWCC (Zero-Time Windowing Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Block Samples: 8,874
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~37 seconds
+
+Results:
+  - Train F1-Score: 0.8578
+  - Test F1-Score: 0.7424
+
+Status: ✅ COMPLETED
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+All 4 SVM BLOCK classification models have been successfully trained and 
+evaluated. Best performing model: SVM + MFCC with Test F1-Score of 0.8120
+
+================================================================================
+                  SVM INTERJECTION CLASSIFICATION RESULTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. SVM + CQCC (Constant-Q Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Interjection Samples: 7,535
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 8.08 minutes
+
+Results:
+  - Train F1-Score: 0.8684
+  - Test F1-Score: 0.7523
+  - Generalization Gap: 0.1161
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+2. SVM + MFCC (Mel-Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Interjection Samples: 7,535
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 1.05 minutes
+
+Results:
+  - Train F1-Score: 0.8594
+  - Test F1-Score: 0.7570
+  - Generalization Gap: 0.1024
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+3. SVM + SFFCC (Spectral Flux-based Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Interjection Samples: 7,535
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 0.66 minutes
+
+Results:
+  - Train F1-Score: 0.8681
+  - Test F1-Score: 0.7612
+  - Generalization Gap: 0.1068
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+4. SVM + ZTWCC (Zero-Time Windowing Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Interjection Samples: 7,535
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 0.55 minutes
+
+Results:
+  - Train F1-Score: 0.8603
+  - Test F1-Score: 0.7503
+  - Generalization Gap: 0.1101
+
+Status: ✅ COMPLETED
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+SVM INTERJECTION: All 4 models completed successfully. 
+Best performing: SVM + SFFCC with Test F1-Score of 0.7612
+
+================================================================================
+                 SVM PROLONGATION CLASSIFICATION RESULTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. SVM + CQCC (Constant-Q Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Prolongation Samples: 6,379
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~6.99 minutes
+
+Results:
+  - Test F1-Score: 0.7043
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+2. SVM + MFCC (Mel-Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Prolongation Samples: 6,379
+  - Feature Dimensions: 78
+  - Feature Extraction Time: ~0.96 minutes
+
+Results:
+  - Train F1-Score: 0.8448
+  - Test F1-Score: 0.7191
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+3. SVM + SFFCC (Spectral Flux-based Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------Dataset:
+  - Clean Samples: 4,090
+  - Prolongation Samples: 6,379
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.62 minutes
+
+Results:
+  - Train F1-Score: 0.8485
+  - Test F1-Score: 0.7272
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+4. SVM + ZTWCC (Zero-Time Windowing Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Prolongation Samples: 6,379
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.50 minutes
+
+Results:
+  - Train F1-Score: 0.8447
+  - Test F1-Score: 0.7224
+
+Status: ✅ COMPLETED
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+SVM PROLONGATION: All 4 models completed successfully. 
+Best performing: SVM + SFFCC with Test F1-Score of 0.7272
+
+================================================================================
+               SVM SOUND REPETITION CLASSIFICATION RESULTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. SVM + CQCC (Constant-Q Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Sound Repetition Samples: 4,432
+  - Feature Dimensions: 56
+  - Feature Extraction Time: 6.85 minutes
+
+Results:
+  - Train F1-Score: 0.7923
+  - Test F1-Score: 0.6590
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+2. SVM + MFCC (Mel-Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Sound Repetition Samples: 4,432
+  - Feature Dimensions: 78
+  - Feature Extraction Time: ~0.80 minutes
+
+Results:
+  - Train F1-Score: 0.8348
+  - Test F1-Score: 0.6832
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+3. SVM + SFFCC (Spectral Flux-based Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Sound Repetition Samples: 4,432
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.50 minutes
+
+Results:
+  - Train F1-Score: 0.8330
+  - Test F1-Score: 0.6897
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+4. SVM + ZTWCC (Zero-Time Windowing Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Sound Repetition Samples: 4,432
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.42 minutes
+
+Results:
+  - Train F1-Score: 0.8240
+  - Test F1-Score: 0.6969
+
+Status: ✅ COMPLETED
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+SVM SOUND REPETITION: All 4 models completed successfully. 
+Best performing: SVM + ZTWCC with Test F1-Score of 0.6969
+
+================================================================================
+               SVM WORD REPETITION CLASSIFICATION RESULTS
+================================================================================
+
+------------------------------------------------------------------------------
+1. SVM + CQCC (Constant-Q Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Word Repetition Samples: 3,795
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~5.38 minutes
+
+Results:
+  - Train F1-Score: 0.8300
+  - Test F1-Score: 0.6126
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+2. SVM + MFCC (Mel-Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Word Repetition Samples: 3,795
+  - Feature Dimensions: 78
+  - Feature Extraction Time: ~0.72 minutes
+
+Results:
+  - Train F1-Score: 0.8239
+  - Test F1-Score: 0.6359
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+3. SVM + SFFCC (Spectral Flux-based Frequency Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Word Repetition Samples: 3,795
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.48 minutes
+
+Results:
+  - Train F1-Score: 0.8323
+  - Test F1-Score: 0.6456
+
+Status: ✅ COMPLETED
+
+------------------------------------------------------------------------------
+4. SVM + ZTWCC (Zero-Time Windowing Cepstral Coefficients)
+------------------------------------------------------------------------------
+Dataset:
+  - Clean Samples: 4,090
+  - Word Repetition Samples: 3,795
+  - Feature Dimensions: 56
+  - Feature Extraction Time: ~0.40 minutes
+
+Results:
+  - Train F1-Score: 0.8296
+  - Test F1-Score: 0.6366
+
+Status: ✅ COMPLETED
+
+================================================================================
+                              SUMMARY
+================================================================================
+
+SVM WORD REPETITION: All 4 models completed successfully. 
+Best performing: SVM + SFFCC with Test F1-Score of 0.6456
+
+================================================================================
+                         COMPLETE PROJECT SUMMARY
+================================================================================
+
+✅ SVM_BLOCK: 4/4 models completed | Best: MFCC (F1=0.8120)
+✅ SVM_INTERJECTION: 4/4 models completed | Best: SFFCC (F1=0.7612)
+✅ SVM_PROLONGATION: 4/4 models completed | Best: SFFCC (F1=0.7272)
+✅ SVM_SOUND_REPTITION: 4/4 models completed | Best: ZTWCC (F1=0.6969)
+✅ SVM_WORD-REPETITION: 4/4 models completed | Best: SFFCC (F1=0.6456)
+
+TOTAL: 20/20 MODELS SUCCESSFULLY TRAINED AND EVALUATED
+
+================================================================================
+
+
+================================================================================
+                    CONSOLIDATED RESULTS TABLE (ALL 20 MODELS)
+================================================================================
+
++------------------------+----------+-------------+-------------+--------+--------+
+| Stuttering Event Type  | Feature  | Train F1    | Test F1     | Clean  | Stutter|
+|                        | Method   | Score       | Score       | Samples| Samples|
++------------------------+----------+-------------+-------------+--------+--------+
+|                        |          |             |             |        |        |
+| BLOCK                  | CQCC     | N/A         | 0.7481      | 4,090  | 8,874  |
+| BLOCK                  | MFCC     | 0.8559      | 0.8120 ⭐   | 4,090  | 8,874  |
+| BLOCK                  | SFFCC    | 0.8611      | 0.7469      | 4,090  | 8,874  |
+| BLOCK                  | ZTWCC    | 0.8578      | 0.7424      | 4,090  | 8,874  |
+|                        |          |             |             |        |        |
++------------------------+----------+-------------+-------------+--------+--------+
+|                        |          |             |             |        |        |
+| INTERJECTION           | CQCC     | 0.8684      | 0.7523      | 4,090  | 7,535  |
+| INTERJECTION           | MFCC     | 0.8594      | 0.7570      | 4,090  | 7,535  |
+| INTERJECTION           | SFFCC    | 0.8681      | 0.7612 ⭐   | 4,090  | 7,535  |
+| INTERJECTION           | ZTWCC    | 0.8603      | 0.7503      | 4,090  | 7,535  |
+|                        |          |             |             |        |        |
++------------------------+----------+-------------+-------------+--------+--------+
+|                        |          |             |             |        |        |
+| PROLONGATION           | CQCC     | N/A         | 0.7043      | 4,090  | 6,379  |
+| PROLONGATION           | MFCC     | 0.8448      | 0.7191      | 4,090  | 6,379  |
+| PROLONGATION           | SFFCC    | 0.8485      | 0.7272 ⭐   | 4,090  | 6,379  |
+| PROLONGATION           | ZTWCC    | 0.8447      | 0.7224      | 4,090  | 6,379  |
+|                        |          |             |             |        |        |
++------------------------+----------+-------------+-------------+--------+--------+
+|                        |          |             |             |        |        |
+| SOUND REPETITION       | CQCC     | 0.7923      | 0.6590      | 4,090  | 4,432  |
+| SOUND REPETITION       | MFCC     | 0.8348      | 0.6832      | 4,090  | 4,432  |
+| SOUND REPETITION       | SFFCC    | 0.8330      | 0.6897      | 4,090  | 4,432  |
+| SOUND REPETITION       | ZTWCC    | 0.8240      | 0.6969 ⭐   | 4,090  | 4,432  |
+|                        |          |             |             |        |        |
++------------------------+----------+-------------+-------------+--------+--------+
+|                        |          |             |             |        |        |
+| WORD REPETITION        | CQCC     | 0.8300      | 0.6126      | 4,090  | 3,795  |
+| WORD REPETITION        | MFCC     | 0.8239      | 0.6359      | 4,090  | 3,795  |
+| WORD REPETITION        | SFFCC    | 0.8323      | 0.6456 ⭐   | 4,090  | 3,795  |
+| WORD REPETITION        | ZTWCC    | 0.8296      | 0.6366      | 4,090  | 3,795  |
+|                        |          |             |             |        |        |
++------------------------+----------+-------------+-------------+--------+--------+
+
+⭐ = Best Test F1-Score for each stuttering event type
+
+================================================================================
+                           KEY FINDINGS & INSIGHTS
+================================================================================
+
+1. BEST OVERALL PERFORMANCE:
+   - Block Detection: MFCC (F1 = 0.8120) - Highest across all categories
+   - Most challenging: Word Repetition (Best F1 = 0.6456)
+
+2. FEATURE METHOD EFFECTIVENESS:
+   - MFCC: Best for Block detection
+   - SFFCC: Best for Interjection, Prolongation, and Word Repetition
+   - ZTWCC: Best for Sound Repetition
+
+3. DATASET CHARACTERISTICS:
+   - Consistent Clean Samples: 4,090 across all event types
+   - Largest Stuttering Class: Block (8,874 samples)
+   - Smallest Stuttering Class: Word Repetition (3,795 samples)
+
+4. MODEL GENERALIZATION:
+   - Average Train-Test Gap ranges from 0.10 to 0.19
+   - Best generalization in Block detection models
+
+================================================================================

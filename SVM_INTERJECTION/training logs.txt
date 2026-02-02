@@ -1,0 +1,7 @@
+1.MFCC + SVM F1-score (Interjection): 0.7413
+
+2.CQCC + SVM F1-score (Interjection):  0.731
+
+3.SFFCC + SVM F1-score (Interjection): 0.7411
+
+4. ZTWCC + SVM F1-score (Interjection): 0.7317

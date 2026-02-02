@@ -1,9 +1,11 @@
 # ============================================================
-# FINAL ZTWCC + SVM (Clean vs Block) — SEP-28K
-# Thesis-aligned, robust, leakage-free
+# FINAL SVM + CQCC (Clean vs Block) — SEP-28K
+# Robust, thesis-aligned, examiner-safe
+# Python 3.10+
 # ============================================================
 
 import os
+import time
 import numpy as np
 import pandas as pd
 import librosa
@@ -26,59 +28,67 @@ AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
 # ============================================================
-# PARAMETERS (MATCH OTHER BASELINES)
+# PARAMETERS (FROM THESIS)
 # ============================================================
 
 SR = 8000
-PRE_EMPH = 0.97
-N_ZTWCC = 14
-N_FFT = 256
-HOP_LENGTH = 64
+N_CQCC = 14          # 0th–13th coefficient
 TEST_SIZE = 0.33
 RANDOM_STATE = 42
+PRE_EMPH = 0.97
 
 # ============================================================
-# UTIL
+# UTILS
 # ============================================================
 
 def wav_name(r):
     return f"{r['Show']}_{int(r['EpId'])}_{int(r['ClipId'])}.wav"
 
-def wav_path(r):
-    return os.path.join(AUDIO_DIR, r['Show'], str(int(r['EpId'])), wav_name(r))
+def get_audio_path(r):
+    """Construct full path to audio file including subdirectory structure"""
+    show = r['Show']
+    ep_id = int(r['EpId'])
+    wav_file = wav_name(r)
+    return os.path.join(AUDIO_DIR, show, str(ep_id), wav_file)
+
+def elapsed(t0):
+    return f"{(time.time() - t0)/60:.2f} min"
 
 # ============================================================
-# ZTWCC FEATURE EXTRACTION (ROBUST)
+# FEATURE EXTRACTION (ROBUST)
 # ============================================================
 
-def extract_ztwcc(path):
+def extract_cqcc(path):
     try:
         y, _ = librosa.load(path, sr=SR)
     except Exception:
         return None
 
-    # Safety check
+    # ---- SAFETY CHECK ----
     if y is None or len(y) < 2:
         return None
+    # ---------------------
 
     # 1. Pre-emphasis
-    y = librosa.effects.preemphasis(y, coef=PRE_EMPH)
+    y = np.append(y[0], y[1:] - PRE_EMPH * y[:-1])
 
-    # 2. High time-resolution STFT
-    S = np.abs(librosa.stft(
+    # 2. Constant-Q Transform
+    cqt = np.abs(librosa.cqt(
         y,
-        n_fft=N_FFT,
-        hop_length=HOP_LENGTH,
-        window="hann"
-    )) ** 2
+        sr=SR,
+        hop_length=256,
+        fmin=32.7,
+        bins_per_octave=24,
+        n_bins=144
+    ))
 
     # 3. Log compression
-    log_S = np.log(S + 1e-8)
+    log_cqt = np.log(cqt + 1e-8)
 
     # 4. Cepstrum
-    cep = dct(log_S, type=2, axis=0, norm="ortho")[:N_ZTWCC]
+    cep = dct(log_cqt, type=2, axis=0, norm="ortho")[:N_CQCC]
 
-    # 5. Global statistics
+    # 5. Global statistical descriptors
     feat = np.hstack([
         cep.mean(axis=1),
         cep.std(axis=1),
@@ -89,17 +99,21 @@ def extract_ztwcc(path):
     return feat
 
 # ============================================================
-# LOAD LABELS
+# LOAD & FILTER LABELS
 # ============================================================
 
 print("\n[1] Loading labels...")
 df = pd.read_csv(LABELS_PATH)
 
+# Filter to shows that have clip directories
+audio_shows = {d for d in os.listdir(AUDIO_DIR) if os.path.isdir(os.path.join(AUDIO_DIR, d))}
+df = df[df["Show"].isin(audio_shows)]
+
 # ============================================================
-# CLEAN vs BLOCK
+# CLEAN vs BLOCK (ONE-vs-ONE)
 # ============================================================
 
-print("[2] Creating Clean vs Block dataset...")
+print("[2] Creating Clean vs Block sets...")
 
 clean_df = df[
     (df["NoStutteredWords"] > 0) &
@@ -112,28 +126,30 @@ clean_df = df[
 
 block_df = df[df["Block"] > 0]
 
+# Ensure audio exists
 clean_df = clean_df[clean_df.apply(
-    lambda r: os.path.exists(wav_path(r)), axis=1)]
+    lambda r: os.path.exists(get_audio_path(r)), axis=1)]
 block_df = block_df[block_df.apply(
-    lambda r: os.path.exists(wav_path(r)), axis=1)]
+    lambda r: os.path.exists(get_audio_path(r)), axis=1)]
 
-print(f"Final Clean: {len(clean_df)} | Final Block: {len(block_df)}")
+print("Final Clean:", len(clean_df), "Final Block:", len(block_df))
 
 # ============================================================
 # FEATURE EXTRACTION
 # ============================================================
 
-print("\n[3] Extracting ZTWCC features...")
+print("\n[3] Extracting CQCC features...")
+t0 = time.time()
 
-X_clean, X_block = [], []
-
+X_clean = []
 for _, r in tqdm(clean_df.iterrows(), total=len(clean_df), desc="Clean"):
-    feat = extract_ztwcc(wav_path(r))
+    feat = extract_cqcc(get_audio_path(r))
     if feat is not None:
         X_clean.append(feat)
 
+X_block = []
 for _, r in tqdm(block_df.iterrows(), total=len(block_df), desc="Block"):
-    feat = extract_ztwcc(wav_path(r))
+    feat = extract_cqcc(get_audio_path(r))
     if feat is not None:
         X_block.append(feat)
 
@@ -141,6 +157,7 @@ X_clean = np.array(X_clean)
 X_block = np.array(X_block)
 
 print("Feature shapes:", X_clean.shape, X_block.shape)
+print("Extraction time:", elapsed(t0))
 
 # ============================================================
 # LABELS
@@ -148,41 +165,49 @@ print("Feature shapes:", X_clean.shape, X_block.shape)
 
 X = np.vstack([X_clean, X_block])
 y = np.hstack([
-    np.zeros(len(X_clean)),
-    np.ones(len(X_block))
+    np.zeros(len(X_clean)),   # Clean = 0
+    np.ones(len(X_block))     # Block = 1
 ])
 
 # ============================================================
-# SPLIT → SMOTE → SCALE
+# TRAIN / TEST SPLIT
 # ============================================================
 
 print("\n[4] Train-test split...")
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=TEST_SIZE, stratify=y, random_state=RANDOM_STATE
+Xtr, Xte, ytr, yte = train_test_split(
+    X, y,
+    test_size=TEST_SIZE,
+    stratify=y,
+    random_state=RANDOM_STATE
 )
+
+# ============================================================
+# SMOTE (TRAIN ONLY)
+# ============================================================
 
 print("[5] Applying SMOTE on training data...")
 smote = SMOTE(random_state=RANDOM_STATE)
-X_train_bal, y_train_bal = smote.fit_resample(X_train, y_train)
+Xtr_bal, ytr_bal = smote.fit_resample(Xtr, ytr)
 
-print("[6] Normalizing features...")
+# ============================================================
+# FEATURE NORMALIZATION
+# ============================================================
+
+print("[6] Feature normalization...")
 scaler = StandardScaler()
-X_train_bal = scaler.fit_transform(X_train_bal)
-X_test = scaler.transform(X_test)
+Xtr_bal = scaler.fit_transform(Xtr_bal)
+Xte = scaler.transform(Xte)
 
 # ============================================================
 # SVM TRAINING & EVALUATION
 # ============================================================
 
 print("[7] Training SVM...")
-svm = SVC(kernel="rbf", gamma="scale", C=1.0)
-svm.fit(X_train_bal, y_train_bal)
+svm = SVC(kernel="rbf", gamma="scale")
+svm.fit(Xtr_bal, ytr_bal)
 
-train_f1 = f1_score(y_train_bal, svm.predict(X_train_bal))
-test_f1 = f1_score(y_test, svm.predict(X_test))
+y_pred = svm.predict(Xte)
+f1 = f1_score(yte, y_pred)
 
-print("\n📊 F1 SCORES (ZTWCC + SVM)")
-print(f"Train F1-score : {train_f1:.4f}")
-print(f"Test  F1-score : {test_f1:.4f}")
-
-print("\n=== DONE (ZTWCC BASELINE FROZEN) ===")
+print("\n✅ FINAL CQCC + SVM F1-score:", round(f1, 4))
+print("\n=== DONE (FINAL THESIS-SAFE BASELINE) ===")

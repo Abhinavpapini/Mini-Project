@@ -1,0 +1,7 @@
+1.MFCC + SVM F1-score : 0.6555
+
+2.CQCC + SVM F1-score : 0.6459
+
+3.SFFCC + SVM F1-score:0.6734
+
+4.ZTWCC + SVM F1-score :0.6687

@@ -1,51 +1,70 @@
-# Python
+# Dataset and Audio Files (Large files - should not be pushed to GitHub)
+ml-stuttering-events-dataset/
+clips/
+wavs/
+*.wav
+*.mp3
+*.flac
+
+# Python Virtual Environment
+.venv/
+venv/
+env/
+ENV/
+
+# Python Cache and Compiled Files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-*.egg-info/
-dist/
+
+# Distribution / Packaging
 build/
-
-# Virtual Environment
-.venv/
-venv/
-ENV/
-env/
-
-# Audio Data (large files)
-ml-stuttering-events-dataset/clips/
-ml-stuttering-events-dataset/wavs/
-*.wav
-*.mp3
-*.m4a
-
-# Trained Models (if saved)
-*.pkl
-*.joblib
-*.h5
-*.pt
-*.pth
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Jupyter Notebook
-.ipynb_checkpoints/
-*.ipynb
+.ipynb_checkpoints
 
-# IDEs
-.vscode/
+# PyCharm
 .idea/
-*.swp
-*.swo
-*~
 
-# OS
+# VS Code
+.vscode/
+
+# macOS
 .DS_Store
+
+# Windows
 Thumbs.db
 desktop.ini
 
-# Logs
+# Model files (if large)
+*.pkl
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+
+# Log files
 *.log
 
-# CSV files with sensitive data (optional - uncomment if needed)
-# *.csv
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
