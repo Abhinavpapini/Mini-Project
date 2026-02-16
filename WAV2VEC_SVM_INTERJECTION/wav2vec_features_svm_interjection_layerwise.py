@@ -247,50 +247,16 @@ def main():
             best_layer = r['layer']
     
     print("-" * 70)
-    print(f"\n🏆 BEST LAYER: Layer {best_layer} (Test F1 = {best_test_f1:.4f})")
-    
-    # Save results to file
-    print("\n[8] Saving results to file...")
-    output_file = "results_wav2vec_svm_interjection.txt"
-    with open(output_file, 'w') as f:
-        f.write("="*70 + "\n")
-        f.write("WAV2VEC2 FEATURES + SVM (INTERJECTION CLASSIFICATION)\n")
-        f.write("CORRECTED METHODOLOGY: Wav2Vec2 as Feature Extractor\n")
-        f.write("="*70 + "\n\n")
-        
-        f.write(f"Dataset:\n")
-        f.write(f"  - Clean samples: {len(clean_df)}\n")
-        f.write(f"  - Interjection samples: {len(interjection_df)}\n")
-        f.write(f"  - Train samples: {len(X_paths_train)}\n")
-        f.write(f"  - Test samples: {len(X_paths_test)}\n\n")
-        
-        f.write("LAYER-WISE COMPARISON RESULTS:\n")
-        f.write("-" * 70 + "\n")
-        f.write(f"{'{:<10} {:<15} {:<15} {:<15}'.format('Layer', 'Train F1', 'Test F1', 'Test Accuracy')}\n")
-        f.write("-" * 70 + "\n")
-        for r in results:
-            f.write(f"{'{:<10} {:<15.4f} {:<15.4f} {:<15.4f}'.format(r['layer'], r['train_f1'], r['test_f1'], r['test_acc'])}\n")
-        f.write("-" * 70 + "\n\n")
-        
-        f.write(f"🏆 BEST LAYER: Layer {best_layer} (Test F1 = {best_test_f1:.4f})\n\n")
-        
-        f.write("KEY FINDINGS:\n")
-        f.write("- Wav2Vec2 used as FEATURE EXTRACTOR (frozen, no training)\n")
-        f.write("- SVM classifier (same as MFCC/CQCC/SFFCC/ZTWCC)\n")
-        f.write(f"- Best performing layer: Layer {best_layer}\n")
-        f.write(f"- Best Test F1-Score: {best_test_f1:.4f}\n")
-        f.write("- Feature dimension: 768 (from Wav2Vec2 hidden states)\n")
-    
-    print(f"✅ Results saved to: {output_file}")
+    print("\nBEST LAYER: Layer " + str(best_layer) + " (Test F1 = " + str(best_test_f1) + ")")
     
     print("\n" + "="*70)
-    print("✅ ANALYSIS COMPLETE")
+    print("ANALYSIS COMPLETE")
     print("="*70)
-    print(f"\nKEY FINDINGS:")
-    print(f"- Wav2Vec2 used as FEATURE EXTRACTOR (frozen, no training)")
-    print(f"- SVM classifier (same as MFCC/CQCC/SFFCC/ZTWCC)")
-    print(f"- Best performing layer: Layer {best_layer}")
-    print(f"- Best Test F1-Score: {best_test_f1:.4f}")
+    print("\nKEY FINDINGS:")
+    print("- Wav2Vec2 used as FEATURE EXTRACTOR (frozen, no training)")
+    print("- SVM classifier (same as MFCC/CQCC/SFFCC/ZTWCC)")
+    print("- Best performing layer: Layer " + str(best_layer))
+    print("- Best Test F1-Score: " + str(best_test_f1))
 
 if __name__ == "__main__":
     main()

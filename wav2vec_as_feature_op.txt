@@ -1,0 +1,185 @@
+================================================================================
+         WAV2VEC2 AS FEATURE EXTRACTOR + SVM CLASSIFICATION RESULTS
+                   CORRECTED METHODOLOGY (2026)
+================================================================================
+
+Model: facebook/wav2vec2-base (frozen) | Feature Dimension: 768
+Classifier: SVM (RBF kernel) | Dataset: SEP-28k | Layers Tested: [1, 3, 6, 9, 12]
+
+================================================================================
+                            BLOCK CLASSIFICATION
+================================================================================
+
+Dataset:
+  - Clean Samples: 4,090
+  - Block Samples: 8,874
+  - Total Samples: 12,964
+  - Train Samples: 8,685
+  - Test Samples: 4,279
+
+LAYER-WISE COMPARISON:
+------------------------------------------------------------------------------
+Layer      Train F1        Test F1         Test Accuracy   
+------------------------------------------------------------------------------
+1          0.8938          0.8309          0.7441
+3          0.9198          0.8376          0.7607
+6          0.9365          0.8421          0.7717
+9          0.9273          0.8430          0.7731
+12         0.8852          0.8264          0.7338
+------------------------------------------------------------------------------
+
+BEST LAYER: Layer 9 (Test F1 = 0.8430)
+
+DETAILED CLASSIFICATION REPORT (Layer 9):
+              precision    recall  f1-score   support
+       Clean       0.69      0.52      0.59      1350
+       Block       0.80      0.89      0.84      2929
+    accuracy                           0.77      4279
+   macro avg       0.74      0.70      0.72      4279
+weighted avg       0.76      0.77      0.76      4279
+
+Status: ✅ COMPLETED
+
+================================================================================
+                          INTERJECTION CLASSIFICATION
+================================================================================
+
+Dataset:
+  - Clean Samples: 4,090
+  - Interjection Samples: 7,535
+  - Total Samples: 11,625
+
+LAYER-WISE COMPARISON:
+------------------------------------------------------------------------------
+Layer      Train F1        Test F1         Test Accuracy   
+------------------------------------------------------------------------------
+1          [PENDING]       [PENDING]       [PENDING]
+3          [PENDING]       [PENDING]       [PENDING]
+6          [PENDING]       [PENDING]       [PENDING]
+9          [PENDING]       [PENDING]       [PENDING]
+12         [PENDING]       [PENDING]       [PENDING]
+------------------------------------------------------------------------------
+
+BEST LAYER: [PENDING]
+
+Status: ⏳ PENDING
+
+================================================================================
+                         PROLONGATION CLASSIFICATION
+================================================================================
+
+Dataset:
+  - Clean Samples: 4,090
+  - Prolongation Samples: 6,379
+  - Total Samples: 10,469
+
+LAYER-WISE COMPARISON:
+------------------------------------------------------------------------------
+Layer      Train F1        Test F1         Test Accuracy   
+------------------------------------------------------------------------------
+1          [PENDING]       [PENDING]       [PENDING]
+3          [PENDING]       [PENDING]       [PENDING]
+6          [PENDING]       [PENDING]       [PENDING]
+9          [PENDING]       [PENDING]       [PENDING]
+12         [PENDING]       [PENDING]       [PENDING]
+------------------------------------------------------------------------------
+
+BEST LAYER: [PENDING]
+
+Status: ⏳ PENDING
+
+================================================================================
+                      SOUND REPETITION CLASSIFICATION
+================================================================================
+
+Dataset:
+  - Clean Samples: 4,090
+  - Sound Repetition Samples: 4,432
+  - Total Samples: 8,522
+
+LAYER-WISE COMPARISON:
+------------------------------------------------------------------------------
+Layer      Train F1        Test F1         Test Accuracy   
+------------------------------------------------------------------------------
+1          [PENDING]       [PENDING]       [PENDING]
+3          [PENDING]       [PENDING]       [PENDING]
+6          [PENDING]       [PENDING]       [PENDING]
+9          [PENDING]       [PENDING]       [PENDING]
+12         [PENDING]       [PENDING]       [PENDING]
+------------------------------------------------------------------------------
+
+BEST LAYER: [PENDING]
+
+Status: ⏳ PENDING
+
+================================================================================
+                       WORD REPETITION CLASSIFICATION
+================================================================================
+
+Dataset:
+  - Clean Samples: 4,090
+  - Word Repetition Samples: 3,795
+  - Total Samples: 7,885
+
+LAYER-WISE COMPARISON:
+------------------------------------------------------------------------------
+Layer      Train F1        Test F1         Test Accuracy   
+------------------------------------------------------------------------------
+1          [PENDING]       [PENDING]       [PENDING]
+3          [PENDING]       [PENDING]       [PENDING]
+6          [PENDING]       [PENDING]       [PENDING]
+9          [PENDING]       [PENDING]       [PENDING]
+12         [PENDING]       [PENDING]       [PENDING]
+------------------------------------------------------------------------------
+
+BEST LAYER: [PENDING]
+
+Status: ⏳ PENDING
+
+================================================================================
+                         COMPARISON: SVM FEATURES vs WAV2VEC2
+================================================================================
+
++----------------------+---------------+---------------+--------------+---------+
+| Stuttering Type      | SVM Best      | Wav2Vec2 Best | Improvement  | Winner  |
+|                      | (Feature)     | (Layer X)     |              |         |
++----------------------+---------------+---------------+--------------+---------+
+| Block                | 0.8120 (MFCC) | [PENDING]     | [PENDING]    | [TBD]   |
+| Interjection         | 0.7612 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
+| Prolongation         | 0.7272 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
+| Sound Repetition     | 0.6969 (ZTWCC)| [PENDING]     | [PENDING]    | [TBD]   |
+| Word Repetition      | 0.6456 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
++----------------------+---------------+---------------+--------------+---------+
+
+Average Improvement: [TO BE CALCULATED]
+Win Rate: [TO BE CALCULATED]
+
+================================================================================
+                              FINAL SUMMARY
+================================================================================
+
+✅ Models Completed: 1/5 (Block)
+⏳ Models Pending: 4/5
+
+KEY FINDINGS:
+  - Wav2Vec2 used as FEATURE EXTRACTOR (frozen, no training)
+  - SVM classifier with RBF kernel (same as MFCC/CQCC/SFFCC/ZTWCC)
+  - Layer-wise analysis shows which layer captures best stuttering features
+  - This is a FAIR comparison: different features, same classifier
+
+METHODOLOGY:
+  ✅ Wav2Vec2 = Feature Extractor (like MFCC, CQCC, etc.)
+  ✅ SVM = Classifier (same across all methods)
+  ✅ Layer-wise analysis performed
+  ✅ Addressing faculty feedback on methodology
+
+================================================================================
+
+INSTRUCTIONS FOR RECORDING RESULTS:
+1. After each script finishes, copy the layer-wise table from terminal
+2. Paste values into the corresponding section above
+3. Update the BEST LAYER information
+4. Update comparison table with Wav2Vec2 best scores
+5. Calculate final improvements and winner
+
+================================================================================
