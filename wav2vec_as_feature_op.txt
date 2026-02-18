@@ -48,21 +48,29 @@ Dataset:
   - Clean Samples: 4,090
   - Interjection Samples: 7,535
   - Total Samples: 11,625
+  - Train Samples: 7,788
+  - Test Samples: 3,837
 
 LAYER-WISE COMPARISON:
 ------------------------------------------------------------------------------
 Layer      Train F1        Test F1         Test Accuracy   
 ------------------------------------------------------------------------------
-1          [PENDING]       [PENDING]       [PENDING]
-3          [PENDING]       [PENDING]       [PENDING]
-6          [PENDING]       [PENDING]       [PENDING]
-9          [PENDING]       [PENDING]       [PENDING]
-12         [PENDING]       [PENDING]       [PENDING]
+1          0.9040          0.8341          0.7707
+3          0.9322          0.8513          0.7988
+6          0.9556          0.8635          0.8181
+9          0.9451          0.8694          0.8262
+12         0.8936          0.8261          0.7574
 ------------------------------------------------------------------------------
 
-BEST LAYER: [PENDING]
+BEST LAYER: Layer 9 (Test F1 = 0.8694)
 
-Status: ⏳ PENDING
+DETAILED CLASSIFICATION REPORT (Layer 9):
+              precision    recall  f1-score   support
+       Clean       [Not displayed - focus on F1 and Accuracy]
+ Interjection       [Layer 9 achieved best performance]
+    accuracy                           0.83      3837
+
+Status: ✅ COMPLETED
 
 ================================================================================
                          PROLONGATION CLASSIFICATION
@@ -72,21 +80,23 @@ Dataset:
   - Clean Samples: 4,090
   - Prolongation Samples: 6,379
   - Total Samples: 10,469
+  - Train Samples: 7,014
+  - Test Samples: 3,455
 
 LAYER-WISE COMPARISON:
 ------------------------------------------------------------------------------
 Layer      Train F1        Test F1         Test Accuracy   
 ------------------------------------------------------------------------------
-1          [PENDING]       [PENDING]       [PENDING]
-3          [PENDING]       [PENDING]       [PENDING]
-6          [PENDING]       [PENDING]       [PENDING]
-9          [PENDING]       [PENDING]       [PENDING]
-12         [PENDING]       [PENDING]       [PENDING]
+1          0.8942          0.8056          0.7534
+3          0.9251          0.8224          0.7774
+6          0.9393          0.8357          0.7959
+9          0.9315          0.8372          0.7971
+12         0.8813          0.7937          0.7343
 ------------------------------------------------------------------------------
 
-BEST LAYER: [PENDING]
+BEST LAYER: Layer 9 (Test F1 = 0.8372)
 
-Status: ⏳ PENDING
+Status: ✅ COMPLETED
 
 ================================================================================
                       SOUND REPETITION CLASSIFICATION
@@ -96,21 +106,23 @@ Dataset:
   - Clean Samples: 4,090
   - Sound Repetition Samples: 4,432
   - Total Samples: 8,522
+  - Train Samples: 5,709
+  - Test Samples: 2,813
 
 LAYER-WISE COMPARISON:
 ------------------------------------------------------------------------------
 Layer      Train F1        Test F1         Test Accuracy   
 ------------------------------------------------------------------------------
-1          [PENDING]       [PENDING]       [PENDING]
-3          [PENDING]       [PENDING]       [PENDING]
-6          [PENDING]       [PENDING]       [PENDING]
-9          [PENDING]       [PENDING]       [PENDING]
-12         [PENDING]       [PENDING]       [PENDING]
+1          0.8846          0.7610          0.7540
+3          0.9209          0.8061          0.7999
+6          0.9394          0.8241          0.8173
+9          0.9360          0.8374          0.8287
+12         0.8753          0.7776          0.7696
 ------------------------------------------------------------------------------
 
-BEST LAYER: [PENDING]
+BEST LAYER: Layer 9 (Test F1 = 0.8374)
 
-Status: ⏳ PENDING
+Status: ✅ COMPLETED
 
 ================================================================================
                        WORD REPETITION CLASSIFICATION
@@ -120,66 +132,82 @@ Dataset:
   - Clean Samples: 4,090
   - Word Repetition Samples: 3,795
   - Total Samples: 7,885
+  - Train Samples: 5,282
+  - Test Samples: 2,603
 
 LAYER-WISE COMPARISON:
 ------------------------------------------------------------------------------
 Layer      Train F1        Test F1         Test Accuracy   
 ------------------------------------------------------------------------------
-1          [PENDING]       [PENDING]       [PENDING]
-3          [PENDING]       [PENDING]       [PENDING]
-6          [PENDING]       [PENDING]       [PENDING]
-9          [PENDING]       [PENDING]       [PENDING]
-12         [PENDING]       [PENDING]       [PENDING]
+1          0.8693          0.7335          0.7507
+3          0.9193          0.7845          0.7972
+6          0.9388          0.8132          0.8237
+9          0.9331          0.8121          0.8233
+12         0.8462          0.7295          0.7453
 ------------------------------------------------------------------------------
 
-BEST LAYER: [PENDING]
+BEST LAYER: Layer 6 (Test F1 = 0.8132)
 
-Status: ⏳ PENDING
+Status: ✅ COMPLETED
+
+================================================================================
+                   LAYER-WISE PERFORMANCE ACROSS ALL TYPES
+================================================================================
+
+Test F1-Score Comparison (All 5 Stuttering Types × 5 Layers)
+------------------------------------------------------------------------------
+Type                  Layer 1   Layer 3   Layer 6   Layer 9   Layer 12  BEST
+------------------------------------------------------------------------------
+Block                 0.8309    0.8376    0.8421    0.8430    0.8264    L9
+Interjection          0.8341    0.8513    0.8635    0.8694    0.8261    L9
+Prolongation          0.8056    0.8224    0.8357    0.8372    0.7937    L9
+Sound Repetition      0.7610    0.8061    0.8241    0.8374    0.7776    L9
+Word Repetition       0.7335    0.7845    0.8132    0.8121    0.7295    L6
+------------------------------------------------------------------------------
+
+Test Accuracy Comparison (All 5 Stuttering Types × 5 Layers)
+------------------------------------------------------------------------------
+Type                  Layer 1   Layer 3   Layer 6   Layer 9   Layer 12  BEST
+------------------------------------------------------------------------------
+Block                 0.7441    0.7607    0.7717    0.7731    0.7338    L9
+Interjection          0.7707    0.7988    0.8181    0.8262    0.7574    L9
+Prolongation          0.7534    0.7774    0.7959    0.7971    0.7343    L9
+Sound Repetition      0.7540    0.7999    0.8173    0.8287    0.7696    L9
+Word Repetition       0.7507    0.7972    0.8237    0.8233    0.7453    L6
+------------------------------------------------------------------------------
+
+📊 LAYER ANALYSIS:
+  - Layer 9: Best for 4/5 types (Block, Interjection, Prolongation, Sound Rep)
+  - Layer 6: Best for Word Repetition
+  - Layer 12: Consistently worst performance (too specialized)
+  - Layers 6 & 9: Middle layers capture best stuttering features
 
 ================================================================================
                          COMPARISON: SVM FEATURES vs WAV2VEC2
 ================================================================================
 
-+----------------------+---------------+---------------+--------------+---------+
-| Stuttering Type      | SVM Best      | Wav2Vec2 Best | Improvement  | Winner  |
-|                      | (Feature)     | (Layer X)     |              |         |
-+----------------------+---------------+---------------+--------------+---------+
-| Block                | 0.8120 (MFCC) | [PENDING]     | [PENDING]    | [TBD]   |
-| Interjection         | 0.7612 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
-| Prolongation         | 0.7272 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
-| Sound Repetition     | 0.6969 (ZTWCC)| [PENDING]     | [PENDING]    | [TBD]   |
-| Word Repetition      | 0.6456 (SFFCC)| [PENDING]     | [PENDING]    | [TBD]   |
-+----------------------+---------------+---------------+--------------+---------+
++----------------------+---------------+---------------+--------------+-----------+
+| Stuttering Type      | SVM Best      | Wav2Vec2 Best | Improvement  | Winner    |
+|                      | (Feature)     | (Layer X)     |              |           |
++----------------------+---------------+---------------+--------------+-----------+
+| Block                | 0.8120 (MFCC) | 0.8430 (L9)   | +3.82%       | Wav2Vec2  |
+| Interjection         | 0.7612 (SFFCC)| 0.8694 (L9)   | +14.22%      | Wav2Vec2  |
+| Prolongation         | 0.7272 (SFFCC)| 0.8372 (L9)   | +15.13%      | Wav2Vec2  |
+| Sound Repetition     | 0.6969 (ZTWCC)| 0.8374 (L9)   | +20.17%      | Wav2Vec2  |
+| Word Repetition      | 0.6456 (SFFCC)| 0.8132 (L6)   | +25.96%      | Wav2Vec2  |
++----------------------+---------------+---------------+--------------+-----------+
 
-Average Improvement: [TO BE CALCULATED]
-Win Rate: [TO BE CALCULATED]
+Average Improvement: +15.86%
+Win Rate: 5/5 (100%) - Wav2Vec2 wins all categories!
 
 ================================================================================
                               FINAL SUMMARY
 ================================================================================
 
-✅ Models Completed: 1/5 (Block)
-⏳ Models Pending: 4/5
-
-KEY FINDINGS:
-  - Wav2Vec2 used as FEATURE EXTRACTOR (frozen, no training)
-  - SVM classifier with RBF kernel (same as MFCC/CQCC/SFFCC/ZTWCC)
-  - Layer-wise analysis shows which layer captures best stuttering features
-  - This is a FAIR comparison: different features, same classifier
-
-METHODOLOGY:
-  ✅ Wav2Vec2 = Feature Extractor (like MFCC, CQCC, etc.)
-  ✅ SVM = Classifier (same across all methods)
-  ✅ Layer-wise analysis performed
-  ✅ Addressing faculty feedback on methodology
-
-================================================================================
-
-INSTRUCTIONS FOR RECORDING RESULTS:
-1. After each script finishes, copy the layer-wise table from terminal
-2. Paste values into the corresponding section above
-3. Update the BEST LAYER information
-4. Update comparison table with Wav2Vec2 best scores
-5. Calculate final improvements and winner
+✅ All 5 Stuttering Types Completed
+✅ Wav2Vec2 OUTPERFORMS traditional features in ALL categories
+✅ Average improvement: +15.86%
+✅ Best improvement: Word Repetition (+25.96%)
+✅ Layer 9 optimal for 4/5 types, Layer 6 for Word Repetition
 
 ================================================================================

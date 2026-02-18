@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import torch
 from transformers import Wav2Vec2Processor, Wav2Vec2Model
+import soundfile as sf
 import librosa
 from tqdm import tqdm
 
@@ -75,8 +76,11 @@ def extract_wav2vec2_features(audio_path, processor, model, layer_idx):
         Feature vector (768-dim after mean pooling)
     """
     try:
-        # Load audio
-        audio, sr = librosa.load(audio_path, sr=TARGET_SR)
+        # Load audio using soundfile (avoids Intel MKL LLVM issues)
+        audio, sr = sf.read(audio_path, dtype='float32')
+        # Resample if needed
+        if sr != TARGET_SR:
+            audio = librosa.resample(audio, orig_sr=sr, target_sr=TARGET_SR)
     except Exception:
         return None
     
