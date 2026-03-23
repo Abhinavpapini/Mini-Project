@@ -186,7 +186,37 @@ Run next if time and compute allow:
 - Promote methods by fold-mean performance, not single best run.
 - Keep compute log: start time, end time, GPU, memory, failures.
 
-## 7) Immediate Start Tasks (Next 48 Hours)
+## 7) Leakage and Label-Policy Guards (Mandatory)
+- Fit PCA, scaler, normalizer, and any reducer on train fold only, then transform val and test.
+- Do not tune hyperparameters on test folds; test is for one final locked evaluation pass.
+- Keep one label aggregation policy fixed for all experiments; if policy changes, version it and rerun compared methods.
+- Ensure speaker IDs do not cross train/val/test within a fold.
+- For multi-label setup, fix threshold strategy globally (default 0.5 or tuned on validation only).
+
+Output required:
+- artifacts/splits/fold_integrity_report.csv
+- results/tables/label_policy_version.csv
+
+Stop/Go criteria:
+- Stop immediately if any speaker leakage or train-test preprocessing leakage is detected.
+
+## 8) Quantitative Promotion Thresholds
+- Candidate beats baseline if fold-mean Macro-F1 gain is at least +0.01.
+- Candidate must not degrade minority-class mean F1 by more than 0.005.
+- Candidate must improve or match at least 3 out of 5 folds.
+- Candidate must pass significance test (paired bootstrap or paired t-test) with p < 0.05.
+- For multi-label runs, also require non-decreasing micro-F1 and AUPRC.
+
+Output required:
+- results/tables/promotion_decisions.csv
+
+## 9) Compute Budget and Fail-Fast Rules
+- Stage expensive runs behind one-fold pilot checks before full-fold launch.
+- Abort long runs early if validation Macro-F1 is below baseline minus 0.02 after 30 percent of planned epochs.
+- Limit each branch to top 2 promoted variants before entering next phase.
+- Reserve at least 20 percent compute budget for final ablations and reruns.
+
+## 10) Immediate Start Tasks (Next 48 Hours)
 1. Create split generator and freeze manifests.
 2. Build unified metrics and logger.
 3. Add SSL feature cache writer for all layers.
@@ -194,7 +224,7 @@ Run next if time and compute allow:
 5. Launch A1-lite on three SSL models.
 6. Launch B1 for shortlisted layers from A1-lite.
 
-## 8) Completion Definition
+## 11) Completion Definition
 Project is complete only when all are true:
 - Reproducible best run can be re-executed with same metrics.
 - Final model beats baseline on Macro-F1 and minority stutter-type F1.
