@@ -1,0 +1,2 @@
+run_id,date,phase,exp_id,task_type,ssl_model,ssl_checkpoint,layer_strategy,layer,dim_red,dim,feature_fusion,classifier,loss,imbalance_method,augmentation,split_scheme,fold,seed,threshold_policy,macro_f1,per_class_f1_json,auprc,notes,status,artifacts_path
+,,,,,,,,,,,,,,,,,,,,,,,,,,,

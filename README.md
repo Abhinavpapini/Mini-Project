@@ -27,7 +27,7 @@ Both approaches classify five types of stuttering events:
 
 **Average Improvement**: +1.27% | **Win Rate**: 80%
 
-See [Final_op.txt](Final_op.txt) for SVM results and [wav2vec2_op.txt](wav2vec2_op.txt) for Wav2Vec2 results.
+See [results/svm_op.txt](results/svm_op.txt) for SVM results, [WAV2VEC_AS_MODEL/wav2vec2_op.txt](WAV2VEC_AS_MODEL/wav2vec2_op.txt) for Wav2Vec2 results, and [results/wav2vec_as_feature_op.txt](results/wav2vec_as_feature_op.txt) for Wav2Vec2-as-features + SVM results.
 
 ---
 
@@ -86,8 +86,12 @@ Audio (16kHz) → Wav2Vec2-base (Pre-trained) → Mean Pooling → 3-Layer Class
 ├── WAV2VEC_PROLONGATION/       # Wav2Vec2 Prolongation detection
 ├── WAV2VEC_SOUND_REPETITION/   # Wav2Vec2 Sound repetition detection
 ├── WAV2VEC_WORD_REPETITION/    # Wav2Vec2 Word repetition detection
-├── Final_op.txt                # SVM complete results (20 models)
-├── wav2vec2_op.txt             # Wav2Vec2 complete results (5 models)
+├── results/                    # Aggregated result summaries + tracker
+│   ├── svm_op.txt              # SVM complete results (20 models)
+│   ├── wav2vec_as_feature_op.txt  # Wav2Vec2-as-features + SVM results
+│   └── experiment_tracker.csv  # Template to track all new experiments
+├── WAV2VEC_AS_MODEL/
+│   └── wav2vec2_op.txt          # Wav2Vec2 complete results (5 models)
 ├── requirements.txt            # Dependencies for both approaches
 └── README.md                   # This file
 ```
