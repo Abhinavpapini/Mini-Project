@@ -21,7 +21,7 @@ from sklearn.metrics import f1_score
 # PATHS
 # ============================================================
 
-PROJECT_ROOT = r"c:\23071A05(cse-b) mini project"
+PROJECT_ROOT = r"E:\23071A05(mini project)\Mini-Project"
 AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
@@ -204,3 +204,4 @@ print("Train F1:", f1_score(y_train, y_pred_train))
 print("Test  F1:", f1_score(y_test, y_pred_test))
 
 print("\n=== DONE (FINAL, METHODologically & ENGINEERING SAFE) ===")
+

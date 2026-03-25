@@ -21,7 +21,7 @@ from sklearn.metrics import f1_score
 # PATHS
 # ============================================================
 
-PROJECT_ROOT = r"c:\23071A05(cse-b) mini project"
+PROJECT_ROOT = r"E:\23071A05(mini project)\Mini-Project"
 AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
@@ -166,3 +166,4 @@ y_pred = svm.predict(X_test)
 f1 = f1_score(y_test, y_pred)
 
 print("\nCQCC + SVM F1-score (PURE Clean vs Prolongation):", f1)
+

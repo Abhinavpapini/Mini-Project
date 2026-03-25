@@ -20,7 +20,7 @@ from sklearn.metrics import f1_score, accuracy_score, classification_report
 # Add parent directory to path to import shared utilities
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-PROJECT_ROOT = r"c:\23071A05(cse-b) mini project"
+PROJECT_ROOT = r"E:\23071A05(mini project)\Mini-Project"
 AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
@@ -159,3 +159,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

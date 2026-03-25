@@ -22,7 +22,7 @@ from sklearn.metrics import f1_score
 # PATHS
 # ============================================================
 
-PROJECT_ROOT = r"c:\23071A05(cse-b) mini project"
+PROJECT_ROOT = r"E:\23071A05(mini project)\Mini-Project"
 AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
@@ -217,3 +217,4 @@ print(f"Train F1-score : {train_f1:.4f}")
 print(f"Test  F1-score : {test_f1:.4f}")
 
 print("\n=== DONE (SFFCC BASELINE FROZEN) ===")
+

@@ -23,7 +23,7 @@ from sklearn.metrics import f1_score
 # PATHS
 # ============================================================
 
-PROJECT_ROOT = r"c:\23071A05(cse-b) mini project"
+PROJECT_ROOT = r"E:\23071A05(mini project)\Mini-Project"
 AUDIO_DIR = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "clips")
 LABELS_PATH = os.path.join(PROJECT_ROOT, "ml-stuttering-events-dataset", "SEP-28k_labels.csv")
 
@@ -211,3 +211,4 @@ f1 = f1_score(yte, y_pred)
 
 print("\n✅ FINAL CQCC + SVM F1-score:", round(f1, 4))
 print("\n=== DONE (FINAL THESIS-SAFE BASELINE) ===")
+
