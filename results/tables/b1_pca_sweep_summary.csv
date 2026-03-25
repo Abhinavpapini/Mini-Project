@@ -1,0 +1,9 @@
+model_alias,fold,layer,dim,train_recon_mse,test_recon_mse,explained_variance_sum
+wav2vec2-base,fold0,9,768,0.0,0.0,1.0
+wav2vec2-base,fold0,9,512,0.022689,0.025856,0.977311
+wav2vec2-base,fold0,9,256,0.096005,0.103354,0.903995
+wav2vec2-base,fold0,9,128,0.195681,0.204174,0.804319
+wav2vec2-base,fold0,9,64,0.310534,0.318695,0.689466
+wav2vec2-base,fold0,9,32,0.435765,0.443517,0.564235
+wav2vec2-base,fold0,9,16,0.558631,0.566015,0.441369
+wav2vec2-base,fold0,9,8,0.673312,0.679952,0.326688

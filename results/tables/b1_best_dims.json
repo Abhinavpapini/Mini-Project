@@ -1,0 +1,20 @@
+{
+  "best_by_test_mse": {
+    "model_alias": "wav2vec2-base",
+    "fold": "fold0",
+    "layer": 9,
+    "dim": 768,
+    "train_recon_mse": 0.0,
+    "test_recon_mse": 0.0,
+    "explained_variance_sum": 1.0
+  },
+  "best_by_explained_variance": {
+    "model_alias": "wav2vec2-base",
+    "fold": "fold0",
+    "layer": 9,
+    "dim": 768,
+    "train_recon_mse": 0.0,
+    "test_recon_mse": 0.0,
+    "explained_variance_sum": 1.0
+  }
+}

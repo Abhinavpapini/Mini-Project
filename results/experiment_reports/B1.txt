@@ -1,0 +1,67 @@
+B1 EXPERIMENT REPORT
+====================
+
+Experiment ID: B1
+Title: PCA logarithmic sweep
+Status: DONE (full dataset)
+Run Ref: manual_b1_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Run PCA dimensionality sweep on best-layer SSL embeddings and characterize
+reconstruction-vs-dimension behavior.
+
+Execution commands used
+-----------------------
+1) Full feature cache generation:
+   python experiments/A7_build_feature_cache.py --clips-root ml-stuttering-events-dataset/clips --out-root artifacts/features --model-name facebook/wav2vec2-base --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --max-files 0
+
+2) B1 sweep:
+   python experiments/B1_pca_sweep.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layer 9 --dims 1024 512 256 128 64 32 16 8 --out-dir results/tables --fig-dir results/figures
+
+Input configuration
+-------------------
+- Feature file: artifacts/features/wav2vec2-base/fold0/layer_9.npy
+- Samples: 20,906
+- Features: 768
+- Layer: 9
+- Fold: fold0
+- Sweep dims requested: 1024, 512, 256, 128, 64, 32, 16, 8
+- Effective dims used: 768, 512, 256, 128, 64, 32, 16, 8
+
+Output artifacts
+----------------
+- results/tables/b1_pca_sweep_summary.csv
+- results/tables/b1_best_dims.json
+- results/tables/b1_run_report.json
+- results/figures/b1_pca_sweep.png
+
+Sweep results
+-------------
+- dim 768: test_mse 0.000000, explained_var 1.000000
+- dim 512: test_mse 0.025856, explained_var 0.977311
+- dim 256: test_mse 0.103354, explained_var 0.903995
+- dim 128: test_mse 0.204174, explained_var 0.804319
+- dim 64:  test_mse 0.318695, explained_var 0.689466
+- dim 32:  test_mse 0.443517, explained_var 0.564235
+- dim 16:  test_mse 0.566015, explained_var 0.441369
+- dim 8:   test_mse 0.679952, explained_var 0.326688
+
+Best-dimension summary
+----------------------
+- Best by reconstruction MSE: dim 768 (test_mse 0.000000)
+- Best by explained variance: dim 768 (1.000000)
+
+Interpretation
+--------------
+- This run confirms expected monotonic reconstruction behavior: reducing dimension
+  increases reconstruction error while reducing retained variance.
+- For downstream task selection, compact dimensions (for example 64/32) should be
+  judged by task performance in classifier experiments, not reconstruction alone.
+- The B1 curve and table are now available for subsequent model-comparison steps.
+
+Scope note
+----------
+This B1 completion is full-dataset for wav2vec2-base layer-9 cached features,
+fold0 setup.

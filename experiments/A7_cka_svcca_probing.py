@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -141,12 +142,15 @@ def center(x: np.ndarray) -> np.ndarray:
 
 
 def linear_cka(x: np.ndarray, y: np.ndarray) -> float:
+    # Feature-space formulation avoids building n x n Gram matrices.
+    # CKA = ||Xc^T Yc||_F^2 / (||Xc^T Xc||_F * ||Yc^T Yc||_F)
     x = center(x)
     y = center(y)
-    k = x @ x.T
-    l = y @ y.T
-    hsic = np.sum(k * l)
-    norm = np.sqrt(np.sum(k * k) * np.sum(l * l))
+    xty = x.T @ y
+    xtx = x.T @ x
+    yty = y.T @ y
+    hsic = np.sum(xty * xty)
+    norm = np.sqrt(np.sum(xtx * xtx) * np.sum(yty * yty))
     if norm == 0:
         return 0.0
     return float(hsic / norm)
@@ -164,6 +168,7 @@ def pca_by_variance(x: np.ndarray, threshold: float) -> np.ndarray:
 
 def svcca(x: np.ndarray, y: np.ndarray, threshold: float) -> float:
     from sklearn.cross_decomposition import CCA
+    from sklearn.exceptions import ConvergenceWarning
 
     x_p = pca_by_variance(x, threshold)
     y_p = pca_by_variance(y, threshold)
@@ -175,8 +180,10 @@ def svcca(x: np.ndarray, y: np.ndarray, threshold: float) -> float:
     if k < 1:
         return 0.0
 
-    cca = CCA(n_components=k, max_iter=1000)
-    x_c, y_c = cca.fit_transform(x_p, y_p)
+    cca = CCA(n_components=k, max_iter=2000)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=ConvergenceWarning)
+        x_c, y_c = cca.fit_transform(x_p, y_p)
 
     corrs: List[float] = []
     for i in range(k):
