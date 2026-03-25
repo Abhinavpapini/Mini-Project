@@ -2,6 +2,11 @@
 
 This schedule operationalizes the canonical tracker in results/experiment_tracker.csv.
 
+## Current Execution Snapshot (2026-03-25)
+- Completed so far (strict order): A1, A7, A8, B1, A2, A3, A4, A5, A6, C1
+- Next planned run: C2
+- Core35 progress: 10/35 complete
+
 ## Scope
 - Core plan: 35 experiments (plan_order 1-35)
 - Deferred queue: 5 experiments (plan_order 36-40)
@@ -14,25 +19,25 @@ This schedule operationalizes the canonical tracker in results/experiment_tracke
 ## Week-by-Week Plan
 
 ### Weeks 1-2 (Layer Baselines)
-- A1 (must-run)
-- A7 (must-run)
-- A8 (optional)
+- A1 (must-run) [done]
+- A7 (must-run) [done]
+- A8 (optional) [done]
 
 ### Week 3 (Dimensionality Baseline)
-- B1 (must-run)
+- B1 (must-run) [done]
 
 ### Week 4 (Layer Aggregation)
-- A2 (must-run)
-- A3 (must-run)
+- A2 (must-run) [done]
+- A3 (must-run) [done]
 
 ### Week 5 (Extended Layer + Fusion Start)
-- A4 (optional)
-- A5 (optional)
-- A6 (optional)
-- C1 (must-run)
+- A4 (optional) [done]
+- A5 (optional) [done]
+- A6 (optional) [done]
+- C1 (must-run) [done]
 
 ### Week 6 (Fusion + Production Baselines)
-- C2 (must-run)
+- C2 (must-run) [next]
 - C3 (must-run)
 - C5 (must-run)
 - C6 (optional)
