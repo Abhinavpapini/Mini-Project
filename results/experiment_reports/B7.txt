@@ -1,0 +1,70 @@
+B7 EXPERIMENT REPORT
+====================
+
+Experiment ID: B7
+Title: Sparse PCA for active-dimension selection
+Status: DONE (for current implemented scope)
+Run Ref: manual_b7_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Run Sparse PCA on cached SSL embeddings to study reconstruction vs sparsity and
+identify a compact sparse representation.
+
+Execution command used
+----------------------
+python experiments/B7_sparse_pca.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layer 9 --dims 256 128 64 32 16 8 --alphas 0.1 0.5 1.0 --out-dir results/tables --fig-dir results/figures
+
+Input configuration
+-------------------
+- Feature file: artifacts/features/wav2vec2-base/fold0/layer_9.npy
+- Samples: 100
+- Features: 768
+- Train/test split: 80/20
+- Seed: 42
+- Alpha sweep: 0.1, 0.5, 1.0
+- Requested dims: 256, 128, 64, 32, 16, 8
+
+Output artifacts
+----------------
+- results/tables/b7_sparse_pca_summary.csv
+- results/tables/b7_best_config.json
+- results/tables/b7_run_report.json
+- results/figures/b7_sparse_pca_curve.png
+
+Best configuration (from b7_best_config.json)
+---------------------------------------------
+- model_alias: wav2vec2-base
+- fold: fold0
+- layer: 9
+- alpha: 0.1
+- dim: 79
+- train_recon_mse: 0.004827
+- test_recon_mse: 0.569742
+- sparsity_ratio: 0.233122
+- avg_nonzero_per_component: 588.962
+
+Result table summary
+--------------------
+- Total evaluated rows: 18
+- Lower alpha reduced reconstruction error but yielded less sparsity.
+- Higher alpha increased sparsity but increased reconstruction error.
+- For this run, alpha 0.1 provided the best reconstruction quality.
+
+Noted runtime messages
+----------------------
+- Multiple sklearn ConvergenceWarning messages were shown (LARS early stopping).
+- The run still completed successfully and wrote all expected outputs.
+
+Interpretation
+--------------
+- There is a clear sparsity-error tradeoff in this embedding setup.
+- The selected best point favors reconstruction over maximal sparsity.
+- Additional evaluation with downstream supervised metrics is needed to decide
+  whether this reduction is preferable to PCA-based settings in B1/B2 pipelines.
+
+Scope note
+----------
+This completion reflects the current implemented B7 scope on cached
+wav2vec2-base layer-9 embeddings (fold0).

@@ -1,0 +1,21 @@
+{
+  "experiment": "B7",
+  "feature_file": "artifacts\\features\\wav2vec2-base\\fold0\\layer_9.npy",
+  "num_samples": 100,
+  "num_features": 768,
+  "rows": 18,
+  "summary_csv": "results\\tables\\b7_sparse_pca_summary.csv",
+  "best_json": "results\\tables\\b7_best_config.json",
+  "figure": "results\\figures\\b7_sparse_pca_curve.png",
+  "best": {
+    "model_alias": "wav2vec2-base",
+    "fold": "fold0",
+    "layer": 9,
+    "alpha": 0.1,
+    "dim": 79,
+    "train_recon_mse": 0.004827,
+    "test_recon_mse": 0.569742,
+    "sparsity_ratio": 0.233122,
+    "avg_nonzero_per_component": 588.962
+  }
+}
