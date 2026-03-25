@@ -1,0 +1,75 @@
+C1 EXPERIMENT REPORT
+====================
+
+Experiment ID: C1
+Title: SSL + MFCC fusion baseline (MFCC dimension sweep)
+Status: DONE (full dataset)
+Run Ref: manual_c1_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Build a fusion baseline combining SSL best-layer representation (PCA-32) with
+MFCC statistics and determine the best MFCC feature dimension via sweep.
+
+Execution command used
+----------------------
+python experiments/C1_ssl_mfcc_fusion.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layer 9 --target Block --ssl-pca-dim 32 --mfcc-dims 13 26 39 52 65 78 --epochs 10 --batch-size 256 --lr 0.001 --dropout 0.2 --mfcc-cache artifacts/features/mfcc/fold0/mfcc_stats.npy --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- SSL layer: 9
+- SSL PCA dim: 32
+- MFCC sweep dims: 13, 26, 39, 52, 65, 78
+- Epochs: 10
+- Batch size: 256
+- Learning rate: 0.001
+- Dropout: 0.2
+
+Best sweep result
+-----------------
+- Best MFCC dim: 52
+- Fusion dim: 84
+- Accuracy: 0.620277
+- F1: 0.526818
+- Precision: 0.559140
+- Recall: 0.498028
+
+MFCC sweep summary
+------------------
+- 13 -> F1: 0.517582
+- 26 -> F1: 0.509057
+- 39 -> F1: 0.504714
+- 52 -> F1: 0.526818 (best)
+- 65 -> F1: 0.521238
+- 78 -> F1: 0.525839
+
+Interpretation
+--------------
+- Fusion performance was sensitive to MFCC dimensionality, with best result at
+  52 dimensions in this run.
+- C1 improved over A6 substantially but remained below A5 on F1 for this fold
+  and target.
+- Mid-range MFCC dimensionality appears to provide better complementarity with
+  SSL PCA features than smaller settings.
+
+Output artifacts
+----------------
+- results/tables/c1_run_report.json
+- results/tables/c1_mfcc_sweep_results.csv
+- results/tables/c1_best_train_history.csv
+- results/figures/c1_mfcc_sweep_f1.png
+- artifacts/features/mfcc/fold0/mfcc_stats.npy
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Extension to HuBERT/WavLM aliases can be run for plan-level
+model coverage.

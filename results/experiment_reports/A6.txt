@@ -1,0 +1,74 @@
+A6 EXPERIMENT REPORT
+====================
+
+Experiment ID: A6
+Title: Early/Mid/Late grouped weighted-sum + PCA + CNN
+Status: DONE (full dataset)
+Run Ref: manual_a6_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Aggregate layers into coarse early/mid/late groups, learn group-level softmax
+weights, and evaluate whether grouped fusion improves Block classification.
+
+Execution command used
+----------------------
+python experiments/A6_group_weighted_sum.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --target Block --epochs 12 --batch-size 256 --lr 0.001 --dropout 0.2 --pca-dim 32 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- Layers used: 1, 3, 6, 9, 12
+- Grouping: early={1,3}, mid={6,9}, late={12}
+- Feature dimension: 768
+- PCA dimension: 32
+- Epochs: 12
+- Batch size: 256
+- Learning rate: 0.001
+- Dropout: 0.2
+
+Performance metrics
+-------------------
+- Accuracy: 0.592779
+- F1: 0.302335
+- Precision: 0.554054
+- Recall: 0.207887
+
+Learned group weights
+---------------------
+- early: 0.330731
+- mid: 0.405617
+- late: 0.263652
+
+Dominant group
+--------------
+- mid
+
+Interpretation
+--------------
+- The model placed highest weight on the mid group (layers 6 and 9), consistent
+  with earlier observations that middle layers are informative.
+- Despite this weighting pattern, predictive performance was substantially below
+  A2/A5 for this fold and target.
+- Low recall indicates conservative positive predictions under this setup.
+
+Output artifacts
+----------------
+- results/tables/a6_run_report.json
+- results/tables/a6_group_weights.csv
+- results/tables/a6_layer_group_assignment.csv
+- results/tables/a6_train_history.csv
+- results/figures/a6_group_weights.png
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Further tuning (loss weighting or thresholding) may be needed for
+group-fusion competitiveness.

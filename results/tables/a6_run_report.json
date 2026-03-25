@@ -1,0 +1,48 @@
+{
+  "experiment": "A6",
+  "target": "Block",
+  "device": "cuda",
+  "model_alias": "wav2vec2-base",
+  "fold": "fold0",
+  "num_samples": 20906,
+  "num_pos": 8874,
+  "num_neg": 12032,
+  "layers": [
+    1,
+    3,
+    6,
+    9,
+    12
+  ],
+  "layer_groups": {
+    "early": [
+      1,
+      3
+    ],
+    "mid": [
+      6,
+      9
+    ],
+    "late": [
+      12
+    ]
+  },
+  "feature_dim": 768,
+  "pca_dim": 32,
+  "epochs": 12,
+  "batch_size": 256,
+  "lr": 0.001,
+  "dropout": 0.2,
+  "accuracy": 0.592778574844572,
+  "f1": 0.30233510856206475,
+  "precision": 0.5540540540540541,
+  "recall": 0.20788732394366197,
+  "group_weights": {
+    "early": 0.3307313323020935,
+    "mid": 0.4056166112422943,
+    "late": 0.2636520266532898
+  },
+  "dominant_group": "mid",
+  "group_weights_csv": "results\\tables\\a6_group_weights.csv",
+  "layer_group_assignment_csv": "results\\tables\\a6_layer_group_assignment.csv"
+}

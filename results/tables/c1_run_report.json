@@ -1,0 +1,32 @@
+{
+  "experiment": "C1",
+  "target": "Block",
+  "model_alias": "wav2vec2-base",
+  "fold": "fold0",
+  "layer": 9,
+  "num_samples": 20906,
+  "num_pos": 8874,
+  "num_neg": 12032,
+  "ssl_pca_dim": 32,
+  "mfcc_dims": [
+    13,
+    26,
+    39,
+    52,
+    65,
+    78
+  ],
+  "epochs": 10,
+  "batch_size": 256,
+  "lr": 0.001,
+  "dropout": 0.2,
+  "best_mfcc_dim": 52,
+  "best_accuracy": 0.6202773792443806,
+  "best_f1": 0.5268176400476758,
+  "best_precision": 0.5591397849462365,
+  "best_recall": 0.49802816901408453,
+  "device": "cuda",
+  "mfcc_cache": "artifacts\\features\\mfcc\\fold0\\mfcc_stats.npy",
+  "sweep_csv": "results\\tables\\c1_mfcc_sweep_results.csv",
+  "best_history_csv": "results\\tables\\c1_best_train_history.csv"
+}

@@ -1,0 +1,73 @@
+A5 EXPERIMENT REPORT
+====================
+
+Experiment ID: A5
+Title: Hierarchical convolution across layers + MLP classifier
+Status: DONE (full dataset)
+Run Ref: manual_a5_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Model cross-layer interactions using hierarchical 1D convolutions across the
+layer axis, then classify with an MLP head for Block detection.
+
+Execution command used
+----------------------
+python experiments/A5_hierarchical_conv_layers.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --target Block --epochs 12 --batch-size 256 --lr 0.001 --hidden-dim 128 --dropout 0.25 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- Feature dimension: 768
+- Layers used: 1, 3, 6, 9, 12
+- Epochs: 12
+- Batch size: 256
+- Learning rate: 0.001
+- Hidden dimension: 128
+- Dropout: 0.25
+
+Performance metrics
+-------------------
+- Accuracy: 0.631277
+- F1: 0.564161
+- Precision: 0.566081
+- Recall: 0.562254
+
+Layer salience outcome
+----------------------
+Normalized layer salience share:
+- Layer 1: 0.190260
+- Layer 3: 0.197293
+- Layer 6: 0.211201
+- Layer 9: 0.203341
+- Layer 12: 0.197905
+
+Dominant salience layer:
+- Layer 6
+
+Interpretation
+--------------
+- A5 achieved the best F1 among recent layer-interface runs (A3/A4/A5) for this
+  fold and target.
+- Salience concentration on layer 6 aligns with earlier trends where mid layers
+  carry the strongest discriminative signal for Block.
+- Relative to A2, A5 is slightly better in F1 on this run (0.564161 vs 0.559191).
+
+Output artifacts
+----------------
+- results/tables/a5_run_report.json
+- results/tables/a5_layer_salience.csv
+- results/tables/a5_train_history.csv
+- results/figures/a5_layer_salience.png
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Additional targets/folds can be run for robustness validation.
