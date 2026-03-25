@@ -1,0 +1,76 @@
+A8 EXPERIMENT REPORT
+====================
+
+Experiment ID: A8
+Title: Transition phenomena detection across layers
+Status: DONE (for current implemented scope)
+Run Ref: manual_a8_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Detect representational transition points across layer pairs by analyzing
+embedding drift between adjacent available layers.
+
+Execution command used
+----------------------
+python experiments/A8_transition_analysis.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --out-dir results/tables --fig-dir results/figures
+
+Input configuration
+-------------------
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Layers analyzed: 1, 3, 6, 9, 12
+- Samples per layer: 100
+
+Computed metrics per transition
+-------------------------------
+- L2 norm of mean embedding shift
+- Mean cosine similarity of layer means
+- Mean per-sample L2 drift
+- Std of per-sample L2 drift
+
+Output artifacts
+----------------
+- results/tables/a8_transition_summary.csv
+- results/tables/a8_run_report.json
+- results/figures/a8_transition_drift_curve.png
+
+Transition results (from a8_transition_summary.csv)
+---------------------------------------------------
+1) 1 -> 3
+   - l2_mean_shift: 1.724951
+   - mean_cosine_similarity: 0.753788
+   - mean_per_sample_l2: 2.581393
+
+2) 3 -> 6
+   - l2_mean_shift: 1.531261
+   - mean_cosine_similarity: 0.826969
+   - mean_per_sample_l2: 2.468382
+
+3) 6 -> 9
+   - l2_mean_shift: 1.489611
+   - mean_cosine_similarity: 0.854241
+   - mean_per_sample_l2: 2.297156
+
+4) 9 -> 12
+   - l2_mean_shift: 5.381220
+   - mean_cosine_similarity: 0.303042
+   - mean_per_sample_l2: 6.262990
+
+Key finding
+-----------
+Largest transition is 9 -> 12, with sharply higher drift and much lower cosine
+similarity than earlier transitions. This indicates a major representational
+shift at deeper layers for this model/fold setup.
+
+Interpretation
+--------------
+- Early-mid transitions (1->3, 3->6, 6->9) are relatively smooth.
+- The 9->12 jump is a probable transition point and should be considered when
+  selecting or aggregating layers in follow-up experiments.
+
+Scope note
+----------
+This completion reflects current implemented scope on wav2vec2-base fold0
+with cached layers [1, 3, 6, 9, 12].

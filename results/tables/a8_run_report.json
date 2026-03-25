@@ -1,0 +1,19 @@
+{
+  "experiment": "A8",
+  "model_alias": "wav2vec2-base",
+  "fold": "fold0",
+  "num_pairs": 4,
+  "summary_csv": "results\\tables\\a8_transition_summary.csv",
+  "figure": "results\\figures\\a8_transition_drift_curve.png",
+  "largest_transition": {
+    "model_alias": "wav2vec2-base",
+    "fold": "fold0",
+    "layer_from": 9,
+    "layer_to": 12,
+    "num_samples": 100,
+    "l2_mean_shift": 5.38122,
+    "mean_cosine_similarity": 0.303042,
+    "mean_per_sample_l2": 6.26299,
+    "std_per_sample_l2": 0.293844
+  }
+}
