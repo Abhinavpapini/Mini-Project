@@ -1,0 +1,112 @@
+A1 EXPERIMENT REPORT
+====================
+
+Experiment ID: A1
+Title: Single-layer probing (Wav2Vec2 feature extractor + SVM classifier)
+Status: DONE
+Run Ref: manual_a1_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Evaluate layer-wise separability for stutter-type classification using frozen
+Wav2Vec2 embeddings and an SVM classifier. Compare layers [1, 3, 6, 9, 12]
+across all 5 target types.
+
+Data and Setup
+--------------
+Dataset: SEP-28k
+Classes evaluated independently:
+- Block
+- Interjection
+- Prolongation
+- Sound Repetition
+- Word Repetition
+
+Model pipeline:
+- Feature extractor: facebook/wav2vec2-base (frozen)
+- Feature dimension: 768
+- Classifier: SVM with RBF kernel
+- Layer candidates: 1, 3, 6, 9, 12
+
+Primary Source Files
+--------------------
+- results/wav2vec_as_feature_op.txt
+- results/svm_op.txt
+- WAV2VEC_SVM_BLOCK/results_wav2vec_svm_block.txt
+
+Core A1 Results (Test F1)
+-------------------------
+Block:
+- L1: 0.8309
+- L3: 0.8376
+- L6: 0.8421
+- L9: 0.8430  (BEST)
+- L12: 0.8264
+
+Interjection:
+- L1: 0.8341
+- L3: 0.8513
+- L6: 0.8635
+- L9: 0.8694  (BEST)
+- L12: 0.8261
+
+Prolongation:
+- L1: 0.8056
+- L3: 0.8224
+- L6: 0.8357
+- L9: 0.8372  (BEST)
+- L12: 0.7937
+
+Sound Repetition:
+- L1: 0.7610
+- L3: 0.8061
+- L6: 0.8241
+- L9: 0.8374  (BEST)
+- L12: 0.7776
+
+Word Repetition:
+- L1: 0.7335
+- L3: 0.7845
+- L6: 0.8132  (BEST)
+- L9: 0.8121
+- L12: 0.7295
+
+Best Layer Summary
+------------------
+- Layer 9 is best for 4 out of 5 classes.
+- Layer 6 is best for Word Repetition.
+- Layer 12 is consistently weakest.
+
+A1 Mean Best-F1 (across 5 types)
+---------------------------------
+(0.8430 + 0.8694 + 0.8372 + 0.8374 + 0.8132) / 5 = 0.8400
+
+Comparison vs SVM Baselines (from results/svm_op.txt)
+------------------------------------------------------
+Best SVM feature baseline per class vs A1 best-layer result:
+- Block: 0.8120 -> 0.8430  (+3.82%)
+- Interjection: 0.7612 -> 0.8694  (+14.22%)
+- Prolongation: 0.7272 -> 0.8372  (+15.13%)
+- Sound Repetition: 0.6969 -> 0.8374  (+20.17%)
+- Word Repetition: 0.6456 -> 0.8132  (+25.96%)
+
+Average relative improvement over SVM best-per-class: +15.86%
+
+Key Findings
+------------
+1. Mid-to-late transformer layers carry strongest stutter-discriminative signal.
+2. Layer 9 is the most reliable default layer for follow-up experiments.
+3. Wav2Vec2-layer features with SVM exceed handcrafted SVM baselines on all 5 classes.
+4. A1 establishes a strong foundation for A2/A3 layer aggregation and B1 reduction.
+
+Promotion Decision
+------------------
+A1 is promoted and complete. Use Layer 9 as default start point, with Layer 6
+kept as fallback for Word Repetition specific runs.
+
+Tracker Linkage
+---------------
+- results/experiment_tracker.csv row for exp_id A1 marked done
+- run_id: manual_a1_001
+- macro_f1 logged: 0.8400

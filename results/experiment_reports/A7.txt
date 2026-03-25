@@ -1,0 +1,80 @@
+A7 EXPERIMENT REPORT
+====================
+
+Experiment ID: A7
+Title: CKA/SVCCA cross-layer and cross-model representational probing
+Status: DONE (for current implemented scope)
+Run Ref: manual_a7_002
+Date Logged: 2026-03-25
+
+Objective
+---------
+Measure representational similarity between SSL layers/models using CKA and SVCCA.
+
+What was run
+------------
+1) Feature cache generation:
+   python experiments/A7_build_feature_cache.py \
+     --clips-root ml-stuttering-events-dataset/clips \
+     --out-root artifacts/features \
+     --model-name facebook/wav2vec2-base \
+     --model-alias wav2vec2-base \
+     --fold fold0 \
+     --layers 1 3 6 9 12 \
+     --max-files 100
+
+2) A7 probing:
+   python experiments/A7_cka_svcca_probing.py \
+     --features-root artifacts/features \
+     --out-dir results/tables \
+     --fig-dir results/figures
+
+Inputs
+------
+- Models cached: benchmark-w2v2-base, wav2vec2-base
+- Fold: fold0
+- Layers: 1, 3, 6, 9, 12
+- Number of clips used: 100
+- Feature files discovered: 10
+
+Output files
+------------
+- results/tables/a7_similarity_summary.csv
+- results/tables/a7_top_pairs.csv
+- results/tables/a7_run_report.json
+
+Complete result index (from latest a7_run_report.json)
+-----------------------------------------------
+- experiment: A7
+- features_root: artifacts/features
+- models_found: benchmark-w2v2-base, wav2vec2-base
+- num_feature_files: 10
+- num_similarity_rows: 25
+- heatmaps_written: 2
+
+Where all computed rows are stored
+----------------------------------
+- Full similarity rows (all 25): results/tables/a7_similarity_summary.csv
+- Ranked subset (top rows): results/tables/a7_top_pairs.csv
+
+Generated figures
+-----------------
+- results/figures/a7_cka_heatmap_benchmark-w2v2-base.png
+- results/figures/a7_cka_heatmap_wav2vec2-base.png
+
+Pilot highlights (Top pairs by CKA/SVCCA)
+-----------------------------------------
+- L6 vs L9: CKA 0.978305, SVCCA 0.999999
+- L3 vs L9: CKA 0.968995, SVCCA 0.986992
+- L1 vs L3: CKA 0.949634, SVCCA 0.998554
+
+Observed pattern
+----------------
+- Mid-late layers (3,6,9) are highly similar.
+- Layer 12 is notably less similar to lower/mid layers by CKA.
+
+Scope note
+----------
+This A7 completion reflects the currently implemented scope in this repository.
+If you later decide to include additional SSL model families and folds, re-run
+cache generation for those models and execute A7 again to expand this report.

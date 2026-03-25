@@ -1,0 +1,13 @@
+{
+  "experiment": "A7",
+  "features_root": "artifacts\\features",
+  "models_found": [
+    "benchmark-w2v2-base",
+    "wav2vec2-base"
+  ],
+  "num_feature_files": 10,
+  "num_similarity_rows": 25,
+  "summary_csv": "results\\tables\\a7_similarity_summary.csv",
+  "top_pairs_csv": "results\\tables\\a7_top_pairs.csv",
+  "heatmaps_written": 2
+}
