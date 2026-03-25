@@ -1,0 +1,63 @@
+A2 EXPERIMENT REPORT
+====================
+
+Experiment ID: A2
+Title: Learnable weighted sum of layers
+Status: DONE (full dataset)
+Run Ref: manual_a2_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Train a learnable softmax layer-weighting interface over cached SSL layers and
+optimize end-to-end classification for one stutter target.
+
+Execution command used
+----------------------
+python experiments/A2_weighted_sum.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --target Block --epochs 10 --batch-size 256 --lr 0.001 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- Layers used: 1, 3, 6, 9, 12
+- Epochs: 10
+- Batch size: 256
+- Learning rate: 0.001
+
+Performance metrics
+-------------------
+- Accuracy: 0.645624
+- F1: 0.559191
+- Precision: 0.592313
+- Recall: 0.529577
+
+Learned layer weights
+---------------------
+- Layer 1: 0.153570
+- Layer 3: 0.197880
+- Layer 6: 0.264923
+- Layer 9: 0.227826
+- Layer 12: 0.155801
+
+Interpretation
+--------------
+- Highest emphasis was assigned to layer 6, then layer 9.
+- Mid-to-late layers carry more useful signal than earliest and latest layer in
+  this weighted-sum setup for Block target.
+
+Output artifacts
+----------------
+- results/tables/a2_run_report.json
+- results/tables/a2_layer_weights.csv
+- results/figures/a2_layer_weight_heatmap.png
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Additional per-target runs can be executed for other labels.

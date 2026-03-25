@@ -1,0 +1,35 @@
+{
+  "experiment": "A3",
+  "target": "Block",
+  "device": "cuda",
+  "model_alias": "wav2vec2-base",
+  "fold": "fold0",
+  "num_samples": 20906,
+  "num_pos": 8874,
+  "num_neg": 12032,
+  "layers": [
+    1,
+    3,
+    6,
+    9,
+    12
+  ],
+  "epochs": 12,
+  "batch_size": 256,
+  "lr": 0.001,
+  "tau_start": 1.0,
+  "tau_end": 0.1,
+  "accuracy": 0.6274509803921569,
+  "f1": 0.5137328339575531,
+  "precision": 0.57592722183345,
+  "recall": 0.4636619718309859,
+  "soft_layer_weights": {
+    "1": 0.1405159831047058,
+    "3": 0.18588918447494507,
+    "6": 0.2861780524253845,
+    "9": 0.26162898540496826,
+    "12": 0.12578774988651276
+  },
+  "hard_selected_layer": 9,
+  "weights_csv": "results\\tables\\a3_layer_selection_weights.csv"
+}

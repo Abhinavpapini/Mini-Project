@@ -1,0 +1,82 @@
+A4 EXPERIMENT REPORT
+====================
+
+Experiment ID: A4
+Title: Dimension-wise hard layer selection (Gumbel) + CNN
+Status: DONE (full dataset)
+Run Ref: manual_a4_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Learn per-feature-dimension hard layer routing using straight-through Gumbel-
+Softmax and evaluate whether finer-grained layer selection improves Block
+classification over A2/A3.
+
+Execution command used
+----------------------
+python experiments/A4_dimension_wise_gumbel.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --target Block --epochs 12 --batch-size 256 --lr 0.001 --tau-start 1.0 --tau-end 0.1 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- Feature dimension: 768
+- Layers used: 1, 3, 6, 9, 12
+- Epochs: 12
+- Batch size: 256
+- Learning rate: 0.001
+- Tau schedule: 1.0 -> 0.1
+
+Performance metrics
+-------------------
+- Accuracy: 0.575562
+- F1: 0.000000
+- Precision: 0.000000
+- Recall: 0.000000
+
+Layer-selection outcome
+-----------------------
+Soft mean layer weights (across dimensions):
+- Layer 1: 0.201209
+- Layer 3: 0.198591
+- Layer 6: 0.199531
+- Layer 9: 0.199825
+- Layer 12: 0.200845
+
+Hard selected share of dimensions:
+- Layer 1: 0.213542 (164 dims)
+- Layer 3: 0.187500 (144 dims)
+- Layer 6: 0.201823 (155 dims)
+- Layer 9: 0.186198 (143 dims)
+- Layer 12: 0.210938 (162 dims)
+
+Dominant hard-selected layer:
+- Layer 1
+
+Interpretation
+--------------
+- Selection behavior remained close to uniform across candidate layers rather
+  than converging to a discriminative routing pattern.
+- F1=0 with accuracy near class-prior baseline indicates majority-class collapse
+  for this configuration on Block target.
+- In this fold/run, A4 underperformed both A2 and A3.
+
+Output artifacts
+----------------
+- results/tables/a4_run_report.json
+- results/tables/a4_dimension_selection_weights.csv
+- results/tables/a4_layer_selection_summary.csv
+- results/tables/a4_train_history.csv
+- results/figures/a4_layer_selection_share.png
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Follow-up tuning (class weighting, architecture changes, or
+temperature schedule changes) may be required before broader rollout.

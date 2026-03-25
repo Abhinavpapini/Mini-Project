@@ -1,0 +1,71 @@
+A3 EXPERIMENT REPORT
+====================
+
+Experiment ID: A3
+Title: Gumbel-Softmax hard layer selection + BiLSTM attention
+Status: DONE (full dataset)
+Run Ref: manual_a3_001
+Date Logged: 2026-03-25
+
+Objective
+---------
+Train a hard layer-selection interface using straight-through Gumbel-Softmax
+across candidate SSL layers, then classify with a BiLSTM+attention head.
+
+Execution command used
+----------------------
+python experiments/A3_gumbel_layer_selection.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layers 1 3 6 9 12 --target Block --epochs 12 --batch-size 256 --lr 0.001 --tau-start 1.0 --tau-end 0.1 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- Layers used: 1, 3, 6, 9, 12
+- Epochs: 12
+- Batch size: 256
+- Learning rate: 0.001
+- Tau schedule: 1.0 -> 0.1
+
+Performance metrics
+-------------------
+- Accuracy: 0.627451
+- F1: 0.513733
+- Precision: 0.575927
+- Recall: 0.463662
+
+Layer-selection outcome
+-----------------------
+Soft weights (learned logits after softmax):
+- Layer 1: 0.140516
+- Layer 3: 0.185889
+- Layer 6: 0.286178
+- Layer 9: 0.261629
+- Layer 12: 0.125788
+
+Hard selected layer (argmax under hard Gumbel path):
+- Layer 9
+
+Interpretation
+--------------
+- The hard path selected layer 9, consistent with prior findings that mid-to-late
+  layers are most useful for Block detection.
+- Compared with A2 (F1: 0.559191), this A3 configuration underperformed on fold0,
+  indicating that hard selection did not outperform weighted fusion in this run.
+
+Output artifacts
+----------------
+- results/tables/a3_run_report.json
+- results/tables/a3_layer_selection_weights.csv
+- results/tables/a3_train_history.csv
+- results/figures/a3_layer_selection_weights.png
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Further validation across additional targets/folds can confirm
+whether hard selection generalizes better than weighted-sum fusion.
