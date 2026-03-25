@@ -19,6 +19,7 @@ Both approaches classify five types of stuttering events:
 
 | Stuttering Type | SVM Best | Wav2Vec2 | Winner | Improvement |
 |-----------------|----------|----------|--------|-------------|
+
 | Block | 0.8120 (MFCC) | 0.8127 | Wav2Vec2 ✅ | +0.09% |
 | Interjection | 0.7612 (SFFCC) | 0.7865 | Wav2Vec2 ✅ | +3.32% |
 | Prolongation | 0.7272 (SFFCC) | 0.7572 | Wav2Vec2 ✅ | +4.12% |
