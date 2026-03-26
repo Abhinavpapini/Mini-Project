@@ -1,0 +1,3 @@
+model_alias,salience_share
+wav2vec2-base,0.5
+benchmark-w2v2-base,0.5

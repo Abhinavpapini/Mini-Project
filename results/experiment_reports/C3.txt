@@ -1,0 +1,67 @@
+C3 EXPERIMENT REPORT
+====================
+
+Experiment ID: C3
+Title: Multi-SSL temporal concatenation + Transformer fusion
+Status: DONE (full dataset)
+Run Ref: manual_c3_001
+Date Logged: 2026-03-26
+
+Objective
+---------
+Fuse multiple SSL streams by temporal-style sequence concatenation after linear
+projection, then model stream interactions with a Transformer encoder.
+
+Execution command used
+----------------------
+python experiments/C3_multi_ssl_temporal_concat.py --features-root artifacts/features --model-aliases wav2vec2-base benchmark-w2v2-base --fold fold0 --layer 9 --target Block --proj-dim 64 --num-heads 4 --num-layers 2 --epochs 10 --batch-size 256 --lr 0.001 --dropout 0.2 --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model aliases used: wav2vec2-base, benchmark-w2v2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- SSL layer: 9
+- Projection dim: 64
+- Transformer heads: 4
+- Transformer layers: 2
+- Epochs: 10
+- Batch size: 256
+- Learning rate: 0.001
+- Dropout: 0.2
+
+Performance metrics
+-------------------
+- Accuracy: 0.648494
+- F1: 0.567393
+- Precision: 0.593962
+- Recall: 0.543099
+
+Stream salience outcome
+-----------------------
+- wav2vec2-base: 0.500000
+- benchmark-w2v2-base: 0.500000
+- Dominant stream (tie-broken): wav2vec2-base
+
+Interpretation
+--------------
+- C3 achieved a small improvement over C2 and A5 on F1 for this fold/target.
+- Nearly equal stream salience indicates both streams contributed similarly under
+  the current projection+transformer setup.
+- This run validates the multi-stream fusion pipeline with full cache support.
+
+Output artifacts
+----------------
+- results/tables/c3_run_report.json
+- results/tables/c3_stream_salience.csv
+- results/tables/c3_train_history.csv
+- results/figures/c3_stream_salience.png
+
+Scope note
+----------
+This completion reflects full-dataset run for target=Block on currently
+available cached aliases. Next strict-order item is C5.

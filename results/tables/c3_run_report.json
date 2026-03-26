@@ -1,0 +1,37 @@
+{
+  "experiment": "C3",
+  "target": "Block",
+  "device": "cuda",
+  "model_aliases_requested": [
+    "wav2vec2-base",
+    "benchmark-w2v2-base"
+  ],
+  "model_aliases_used": [
+    "wav2vec2-base",
+    "benchmark-w2v2-base"
+  ],
+  "fold": "fold0",
+  "layer": 9,
+  "num_samples": 20906,
+  "num_pos": 8874,
+  "num_neg": 12032,
+  "feature_dim": 768,
+  "proj_dim": 64,
+  "num_heads": 4,
+  "num_layers": 2,
+  "epochs": 10,
+  "batch_size": 256,
+  "lr": 0.001,
+  "dropout": 0.2,
+  "accuracy": 0.648493543758967,
+  "f1": 0.5673925838728664,
+  "precision": 0.5939617991373999,
+  "recall": 0.5430985915492957,
+  "stream_salience": {
+    "wav2vec2-base": 0.5,
+    "benchmark-w2v2-base": 0.5
+  },
+  "dominant_stream": "wav2vec2-base",
+  "salience_csv": "results\\tables\\c3_stream_salience.csv",
+  "history_csv": "results\\tables\\c3_train_history.csv"
+}

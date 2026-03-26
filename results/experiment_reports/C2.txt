@@ -1,0 +1,74 @@
+C2 EXPERIMENT REPORT
+====================
+
+Experiment ID: C2
+Title: SSL + handcrafted groups ablation baseline
+Status: DONE (full dataset)
+Run Ref: manual_c2_001
+Date Logged: 2026-03-26
+
+Objective
+---------
+Evaluate additive value of handcrafted acoustic feature groups (energy, ZCR,
+jitter, formant) when fused with SSL best-layer PCA features.
+
+Execution command used
+----------------------
+python experiments/C2_ssl_handcrafted_ablation.py --features-root artifacts/features --model-alias wav2vec2-base --fold fold0 --layer 9 --target Block --ssl-pca-dim 32 --epochs 10 --batch-size 256 --lr 0.001 --dropout 0.2 --handcrafted-cache artifacts/features/handcrafted/fold0/c2_handcrafted.npy --out-dir results/tables --fig-dir results/figures
+
+Run configuration
+-----------------
+- Device: cuda
+- Model alias: wav2vec2-base
+- Fold: fold0
+- Target: Block
+- Samples: 20,906
+- Positives: 8,874
+- Negatives: 12,032
+- SSL layer: 9
+- SSL PCA dim: 32
+- Handcrafted groups: energy, zcr, jitter, formant
+- Epochs: 10
+- Batch size: 256
+- Learning rate: 0.001
+- Dropout: 0.2
+
+Best ablation result
+--------------------
+- Best setting: ssl_plus_zcr
+- Handcrafted dims: 2
+- Fusion dim: 34
+- Accuracy: 0.621473
+- F1: 0.554962
+- Precision: 0.553872
+- Recall: 0.556056
+
+Ablation summary
+----------------
+- ssl_only -> F1: 0.532131
+- ssl_plus_energy -> F1: 0.536960
+- ssl_plus_zcr -> F1: 0.554962 (best)
+- ssl_plus_jitter -> F1: 0.541074
+- ssl_plus_formant -> F1: 0.535103
+- ssl_plus_all -> F1: 0.536858
+
+Interpretation
+--------------
+- ZCR group provided the strongest complementary signal with SSL in this fold.
+- Adding all handcrafted groups did not outperform the best single-group setup,
+  indicating possible redundancy/noise in combined handcrafted features.
+- C2 slightly improved over C1 best F1 in this run (0.554962 vs 0.526818).
+
+Output artifacts
+----------------
+- results/tables/c2_run_report.json
+- results/tables/c2_group_ablation_results.csv
+- results/tables/c2_best_train_history.csv
+- results/tables/c2_handcrafted_groups.json
+- results/figures/c2_group_ablation_f1.png
+- artifacts/features/handcrafted/fold0/c2_handcrafted.npy
+
+Scope note
+----------
+This completion reflects full-dataset run for wav2vec2-base fold0 with target
+set to Block. Next strict-order item is C3.

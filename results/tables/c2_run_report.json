@@ -1,0 +1,45 @@
+{
+  "experiment": "C2",
+  "target": "Block",
+  "model_alias": "wav2vec2-base",
+  "fold": "fold0",
+  "layer": 9,
+  "num_samples": 20906,
+  "num_pos": 8874,
+  "num_neg": 12032,
+  "ssl_pca_dim": 32,
+  "groups": {
+    "energy": [
+      0,
+      1
+    ],
+    "zcr": [
+      2,
+      3
+    ],
+    "jitter": [
+      4,
+      5,
+      6
+    ],
+    "formant": [
+      7,
+      8,
+      9
+    ]
+  },
+  "epochs": 10,
+  "batch_size": 256,
+  "lr": 0.001,
+  "dropout": 0.2,
+  "best_setting": "ssl_plus_zcr",
+  "best_accuracy": 0.6214729794356767,
+  "best_f1": 0.5549620466685409,
+  "best_precision": 0.5538720538720538,
+  "best_recall": 0.556056338028169,
+  "device": "cuda",
+  "handcrafted_cache": "artifacts\\features\\handcrafted\\fold0\\c2_handcrafted.npy",
+  "ablation_csv": "results\\tables\\c2_group_ablation_results.csv",
+  "best_history_csv": "results\\tables\\c2_best_train_history.csv",
+  "groups_json": "results\\tables\\c2_handcrafted_groups.json"
+}
