@@ -216,16 +216,25 @@ Output required:
 - Limit each branch to top 2 promoted variants before entering next phase.
 - Reserve at least 20 percent compute budget for final ablations and reruns.
 
-## 10) Status Update (2026-03-31 — 13/35 core experiments done)
+## 10) Status Update (2026-03-31 — 14/35 core experiments done)
 
-### ✅ Completed (plan_order 1–13)
-A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3
+### ✅ Completed (plan_order 1–14)
+A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5
 
-### 🔜 Next Up — Week 6 (current week)
-1. **C5** — ASR+SSL cross-modal fusion (Whisper-large + HuBERT-large BiLSTM+Attention) — *IN PROGRESS*
-2. **C6** — Speaker embedding fusion (HuBERT + ECAPA-TDNN, optional)
-3. **F1** — Focal loss + class-balanced sampling (must-run)
-4. **F4** — Multi-label sigmoid head + BCE (must-run)
+### C5 Final Results (all 5 targets)
+| Target | F1 | Accuracy | AUROC | Dominant |
+|---|---|---|---|---|
+| Block | 0.6311 | 0.6528 | 0.6590 | HuBERT |
+| Prolongation | 0.6168 | 0.7367 | 0.7249 | HuBERT |
+| SoundRep | 0.6093 | 0.7948 | 0.7800 | Whisper |
+| WordRep | 0.5679 | 0.8089 | 0.7633 | HuBERT |
+| Interjection | 0.7160 | 0.7936 | 0.7780 | Whisper |
+| **Mean** | **0.6282** | **0.7574** | **0.7410** | Tied |
+
+### 🔜 Next Up — Week 6 (remaining)
+1. **C6** — Speaker embedding fusion (HuBERT + ECAPA-TDNN, optional)
+2. **F1** — Focal loss + class-balanced sampling (must-run)
+3. **F4** — Multi-label sigmoid head + BCE (must-run)
 
 ### Remaining Core-35 Pipeline
 - Weeks 7–8: D1, D2, D4, D5, D8 (deep models)
