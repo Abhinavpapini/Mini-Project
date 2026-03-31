@@ -41,10 +41,10 @@ This schedule operationalizes the canonical tracker in results/experiment_tracke
 ### Week 6 (Fusion + Production Baselines)
 - C2 (must-run) [done]
 - C3 (must-run) [done]
-- C5 (must-run) [next]
-- C6 (optional)
-- F1 (must-run)
-- F4 (must-run)
+- C5 (must-run) [done]
+- C6 (optional) [done]
+- F1 (must-run) [done]
+- F4 (must-run) [done]
 
 ### Weeks 7-8 (Deep Models)
 - D1 (must-run)
