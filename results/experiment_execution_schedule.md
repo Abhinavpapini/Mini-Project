@@ -2,10 +2,12 @@
 
 This schedule operationalizes the canonical tracker in results/experiment_tracker.csv.
 
-## Current Execution Snapshot (2026-03-25)
-- Completed so far (strict order): A1, A7, A8, B1, A2, A3, A4, A5, A6, C1
-- Next planned run: C2
-- Core35 progress: 10/35 complete
+## Current Execution Snapshot (2026-03-31)
+- Completed so far (strict order): A1, A7, A8, B1, A2, A3, A4, A5, A6, C1, C2, C3
+- Also completed (out-of-order): B7
+- **Total done: 13/35 core experiments**
+- Next planned run: C5 *(IN PROGRESS — script being built)*
+- Core35 progress: 13/35 complete
 
 ## Scope
 - Core plan: 35 experiments (plan_order 1-35)
@@ -37,9 +39,9 @@ This schedule operationalizes the canonical tracker in results/experiment_tracke
 - C1 (must-run) [done]
 
 ### Week 6 (Fusion + Production Baselines)
-- C2 (must-run) [next]
-- C3 (must-run)
-- C5 (must-run)
+- C2 (must-run) [done]
+- C3 (must-run) [done]
+- C5 (must-run) [next]
 - C6 (optional)
 - F1 (must-run)
 - F4 (must-run)

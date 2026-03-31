@@ -6,6 +6,12 @@ wavs/
 *.mp3
 *.flac
 
+# Feature caches and model checkpoints (large binary files)
+artifacts/features/
+artifacts/checkpoints/
+*.npy
+
+
 # Python Virtual Environment
 .venv/
 venv/

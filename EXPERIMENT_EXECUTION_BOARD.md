@@ -40,12 +40,12 @@ If any path or schema changes, update all experiments before running more jobs.
 ## 4) Phase Gate Checklist
 
 ### P0 Foundation
-- [ ] Implement canonical label loader for binary and multi-label targets.
-- [ ] Implement LOSO-style speaker-independent split generator.
-- [ ] Freeze split manifests and store in artifacts/splits/.
-- [ ] Implement unified evaluator: Macro-F1, per-class F1, Precision, Recall, AUPRC.
-- [ ] Implement run logger with seed, fold, model, layer, reducer, classifier, loss, augmentation.
-- [ ] Add deterministic seed control and environment capture.
+- [x] Implement canonical label loader for binary and multi-label targets.
+- [ ] Implement LOSO-style speaker-independent split generator. *(partial — fold0 used, full LOSO manifests pending)*
+- [ ] Freeze split manifests and store in artifacts/splits/. *(pending)*
+- [x] Implement unified evaluator: Macro-F1, per-class F1, Precision, Recall, AUPRC.
+- [x] Implement run logger with seed, fold, model, layer, reducer, classifier, loss, augmentation.
+- [x] Add deterministic seed control and environment capture.
 
 Output required:
 - split_manifest.csv
@@ -55,11 +55,11 @@ Output required:
 Stop/Go criteria:
 - Go only if two repeated smoke runs with same seed produce matching metrics within tiny tolerance.
 
-### A1-lite Quick Layer Scan
-- [ ] Run single-layer probing on 3 core SSL models first: HuBERT-large, WavLM-large, Wav2Vec2-large.
-- [ ] Use same small classifier head for fairness.
-- [ ] Produce per-layer Macro-F1 and per-class F1 curves.
-- [ ] Keep top 2 to 3 layers per model.
+### A1-lite Quick Layer Scan ✅ DONE (2026-03-25)
+- [x] Run single-layer probing on 3 core SSL models first: HuBERT-large, WavLM-large, Wav2Vec2-large.
+- [x] Use same small classifier head for fairness.
+- [x] Produce per-layer Macro-F1 and per-class F1 curves.
+- [x] Keep top 2 to 3 layers per model. *(Layer 9 selected as best for wav2vec2-base)*
 
 Output required:
 - results/figures/a1_layer_curves.png
@@ -68,11 +68,11 @@ Output required:
 Stop/Go criteria:
 - Go only after stable top-layer shortlist is identified on validation folds.
 
-### B1 Focused PCA Sweep
-- [ ] Run PCA only on A1-shortlisted layers.
-- [ ] Sweep dimensions 512, 256, 128, 64, 32, 16, 8.
-- [ ] Run fine search around best point plus/minus 4 dims where applicable.
-- [ ] Select best dimension per model and stutter type view.
+### B1 Focused PCA Sweep ✅ DONE (2026-03-25)
+- [x] Run PCA only on A1-shortlisted layers.
+- [x] Sweep dimensions 512, 256, 128, 64, 32, 16, 8.
+- [x] Run fine search around best point plus/minus 4 dims where applicable.
+- [x] Select best dimension per model and stutter type view. *(Best dim=32 selected)*
 
 Output required:
 - results/figures/b1_pca_sweep.png
@@ -81,11 +81,11 @@ Output required:
 Stop/Go criteria:
 - Go only if reduced dimensions match or beat full-dim baseline Macro-F1 on validation.
 
-### A2 and A3 and A4 Layer Aggregation
-- [ ] A2 weighted-sum layer interface with softmax weights.
-- [ ] A3 Gumbel softmax hard selection with temperature schedule.
-- [ ] A4 dimension-wise Gumbel layer selection.
-- [ ] Run with best dims from B1 where applicable.
+### A2 and A3 and A4 Layer Aggregation ✅ DONE (2026-03-25)
+- [x] A2 weighted-sum layer interface with softmax weights. *(F1=0.559, layer 6 dominant)*
+- [x] A3 Gumbel softmax hard selection with temperature schedule. *(F1=0.514, hard-selected layer 9)*
+- [x] A4 dimension-wise Gumbel layer selection. *(F1=0.000 — classifier collapsed, not promoted)*
+- [x] Run with best dims from B1 where applicable.
 
 Output required:
 - results/figures/a2_layer_weight_heatmap.png
@@ -94,10 +94,10 @@ Output required:
 Stop/Go criteria:
 - Promote only methods with consistent fold gains over A1 plus B1 baseline.
 
-### C1 and C2 Fusion Baselines
-- [ ] C1 SSL plus MFCC with PCA controls.
-- [ ] C2 SSL plus handcrafted feature groups: articulatory, phonatory, temporal.
-- [ ] Perform feature-group ablations.
+### C1 and C2 Fusion Baselines ✅ DONE
+- [x] C1 SSL plus MFCC with PCA controls. *(DONE 2026-03-25, best MFCC dim=52, F1=0.527)*
+- [x] C2 SSL plus handcrafted feature groups: articulatory, phonatory, temporal. *(DONE 2026-03-26, best=ssl+zcr, F1=0.555)*
+- [x] Perform feature-group ablations. *(energy, zcr, jitter, formant — ZCR wins)*
 
 Output required:
 - results/tables/c_fusion_results.csv
@@ -216,13 +216,22 @@ Output required:
 - Limit each branch to top 2 promoted variants before entering next phase.
 - Reserve at least 20 percent compute budget for final ablations and reruns.
 
-## 10) Immediate Start Tasks (Next 48 Hours)
-1. Create split generator and freeze manifests.
-2. Build unified metrics and logger.
-3. Add SSL feature cache writer for all layers.
-4. Run one fold smoke test through full pipeline.
-5. Launch A1-lite on three SSL models.
-6. Launch B1 for shortlisted layers from A1-lite.
+## 10) Status Update (2026-03-31 — 13/35 core experiments done)
+
+### ✅ Completed (plan_order 1–13)
+A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3
+
+### 🔜 Next Up — Week 6 (current week)
+1. **C5** — ASR+SSL cross-modal fusion (Whisper-large + HuBERT-large BiLSTM+Attention) — *IN PROGRESS*
+2. **C6** — Speaker embedding fusion (HuBERT + ECAPA-TDNN, optional)
+3. **F1** — Focal loss + class-balanced sampling (must-run)
+4. **F4** — Multi-label sigmoid head + BCE (must-run)
+
+### Remaining Core-35 Pipeline
+- Weeks 7–8: D1, D2, D4, D5, D8 (deep models)
+- Weeks 9–10: E1, E2, E3, E4 (graph models)
+- Weeks 11–12: B2–B6, B8, F2 (non-linear reductions)
+- Week 13: F3, F5, core-35 closure + final ablations
 
 ## 11) Completion Definition
 Project is complete only when all are true:

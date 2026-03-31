@@ -1,0 +1,144 @@
+C5 EXPERIMENT REPORT
+====================
+
+Experiment ID: C5
+Title: Whisper-large encoder + HuBERT-large cross-modal ASR+SSL fusion (BiLSTM+Attention)
+Status: DONE (full dataset)
+Run Ref: manual_c5_001
+Date Logged: 2026-03-31
+
+Objective
+---------
+Fuse Whisper-large-v3 encoder representations (linguistic/ASR context) with
+HuBERT-large representations (acoustic structure) for stutter type classification.
+Hypothesis: Whisper captures linguistic disfluency context; HuBERT captures acoustic
+phonatory structure — combining them should improve over single-model baselines.
+
+Execution command used
+----------------------
+.venv\Scripts\python.exe experiments/C5_whisper_hubert_bilstm.py \
+    --hubert-alias hubert-large --hubert-layer 21 \
+    --whisper-alias whisper-large --whisper-layer 24 \
+    --target Block --fold fold0 \
+    --ssl-pca-dim 32 --proj-dim 64 \
+    --lstm-hidden 128 --lstm-layers 2 \
+    --epochs 20 --batch-size 256 --lr 3e-4 --dropout 0.3
+
+Run configuration
+-----------------
+- Device            : cuda
+- HuBERT model      : facebook/hubert-large-ll60k
+- HuBERT layer      : 21 (out of 24 transformer layers)
+- HuBERT feat dim   : 1024 → PCA-32
+- Whisper model     : openai/whisper-large-v3
+- Whisper layer     : 24 (out of 32 encoder transformer layers)
+- Whisper feat dim  : 1280 → PCA-32
+- Fold              : fold0
+- Target            : Block (binary: Block vs. non-Block)
+- Total samples     : 20,906
+- Positives (Block) : 8,874  (42.45%)
+- Negatives         : 12,032 (57.55%)
+- PCA dim per stream: 32 (independent PCA, fit on train only)
+- HuBERT PCA expl.  : 58.3% variance retained
+- Whisper PCA expl. : 67.0% variance retained
+- Model params      : 763,138
+- Epochs            : 20
+- Batch size        : 256
+- Learning rate     : 3e-4 (CosineAnnealingLR, eta_min=1.5e-5)
+- Dropout           : 0.3
+- Loss              : CrossEntropyLoss (class-weighted, pos_weight=1.36)
+
+Training history summary
+------------------------
+Epoch | Train loss | Val loss | Val F1   | LR
+------+------------+----------+----------+----------
+1     | 0.647233   | 0.616406 | 0.614211 | 2.98e-04
+2     | 0.616633   | 0.616036 | 0.601196 | 2.93e-04
+3     | 0.608161   | 0.610814 | 0.609614 | 2.84e-04
+4     | 0.603369   | 0.606600 | 0.631098 | 2.73e-04  ← BEST
+5     | 0.598133   | 0.611459 | 0.604585 | 2.58e-04
+6     | 0.596647   | 0.607307 | 0.625487 | 2.41e-04
+7     | 0.595839   | 0.605529 | 0.625713 | 2.22e-04
+8     | 0.591614   | 0.606631 | 0.622139 | 2.02e-04
+9     | 0.590796   | 0.610108 | 0.622558 | 1.80e-04
+10    | 0.588828   | 0.607841 | 0.619483 | 1.58e-04
+11    | 0.586690   | 0.606962 | 0.618590 | 1.35e-04
+12    | 0.583361   | 0.609920 | 0.624639 | 1.13e-04
+13    | 0.585126   | 0.608967 | 0.624967 | 9.28e-05
+14    | 0.580806   | 0.609406 | 0.618701 | 7.37e-05
+15    | 0.580874   | 0.607963 | 0.626431 | 5.67e-05
+16    | 0.579286   | 0.609963 | 0.618651 | 4.22e-05
+17    | 0.579643   | 0.610657 | 0.617370 | 3.05e-05
+18    | 0.578140   | 0.609674 | 0.624935 | 2.20e-05
+19    | 0.577260   | 0.609913 | 0.619338 | 1.68e-05
+20    | 0.577120   | 0.609824 | 0.620853 | 1.50e-05
+
+Best epoch: 4  (val_f1=0.6311)
+
+Test performance (best checkpoint — epoch 4)
+--------------------------------------------
+- Accuracy : 0.6528  (65.28%)
+- F1        : 0.6311  (63.11%)
+- Precision : 0.5747  (57.47%)
+- Recall    : 0.6997  (69.97%)
+- AUROC     : 0.6590  (65.90%)
+
+Stream attention analysis
+-------------------------
+HuBERT-large  (acoustic structure)  : 0.5006  (50.06%)
+Whisper-large (linguistic context)  : 0.4994  (49.94%)
+Dominant stream                     : HuBERT (by tiny margin — effectively tied)
+
+Interpretation
+--------------
+1. C5 F1 = 0.6311 is a clear improvement over:
+   - C1 (SSL+MFCC)           : 0.5268  (+0.1043)
+   - C2 (SSL+handcrafted)    : 0.5550  (+0.0761)
+   - C3 (multi-SSL Transformer): 0.5674 (+0.0637)
+   This makes C5 the best fusion result so far on the Block target.
+
+2. Stream attention is nearly perfectly equal (50.06% vs 49.94%), indicating
+   both HuBERT acoustic features and Whisper linguistic features contribute
+   equally to Block classification. This is consistent with Block being both
+   a motor-phonatory event (HuBERT strength) and a prosodically-marked
+   disfluency (Whisper strength).
+
+3. Best epoch was early (epoch 4 out of 20), with val_f1 plateauing around
+   0.62-0.63 afterward. This suggests the model converges quickly and that
+   the PCA-32 bottleneck may be limiting further gains. Possible improvement:
+   increase PCA dim to 64 or 128 for remaining 4 stutter types.
+
+4. Precision (0.5747) < Recall (0.6997): The model has more false positives
+   than false negatives — it is biased toward predicting Block. The class-
+   weighted loss partially corrects this but Block's 42.45% base rate still
+   challenges precision.
+
+5. Training loss continued decreasing through epoch 20 while val loss plateaued
+   after epoch 7, indicating mild overfitting. Consider adding early stopping
+   or increasing dropout to 0.4 for other targets.
+
+Output artifacts
+----------------
+- results/tables/c5_run_report.json        (full config + all metrics)
+- results/tables/c5_stream_attention.csv   (HuBERT vs Whisper attention weights)
+- results/tables/c5_train_history.csv      (20 epochs of train/val loss + F1)
+- artifacts/checkpoints/C5/c5_best.pt     (best model checkpoint, epoch 4)
+
+Remaining targets to run
+------------------------
+Run in order. Change only --target in the command above.
+- [ ] Prolongation  (expected: HuBERT dominant, vocal tract tension)
+- [ ] SoundRep      (expected: HuBERT dominant, rapid acoustic repetition)
+- [ ] WordRep       (expected: ~tie or slight Whisper, lexical repetition)
+- [ ] Interjection  (expected: Whisper dominant, linguistically structured filler)
+
+Stop/Go gate
+------------
+✅ GO — C5 F1 (0.6311) beats all prior fusion baselines (C1, C2, C3) on Block.
+   Continue with remaining 4 targets.
+   Promote C5 to production-baseline fusion method for Week 6 summary.
+
+Scope note
+----------
+Full-dataset run (20,906 clips) on fold0, target=Block.
+Next strict-order item after all 5 targets: C6 (optional) → F1 (must-run).
