@@ -1,0 +1,149 @@
+C6 EXPERIMENT REPORT
+====================
+
+Experiment ID: C6
+Title: HuBERT-large + WavLM-SV speaker embedding fusion (CNN-1D, binary per stutter type)
+Status: DONE (full dataset, all 5 stutter types)
+Run Ref: manual_c6_001
+Date Logged: 2026-03-31
+
+Note on implementation: Originally designed for ECAPA-TDNN (SpeechBrain), but pivoted
+to microsoft/wavlm-base-plus-sv via HuggingFace transformers due to SpeechBrain 1.0.3
+incompatibility with the installed torchaudio version. WavLM-SV provides equivalent
+speaker identity embeddings (94M params, trained on VoxCeleb).
+
+=====================================================================
+COMPLETE RESULTS — ALL 5 STUTTER TYPES
+=====================================================================
+
+Target       | Accuracy | F1     | Precision | Recall | AUROC  | Best Ep
+-------------|----------|--------|-----------|--------|--------|--------
+Block        | 0.5679   | 0.6221 | 0.4947    | 0.8378 | 0.6033 | 7
+Prolongation | 0.7025   | 0.5672 | 0.5100    | 0.6387 | 0.6846 | 20
+SoundRep     | 0.7422   | 0.5276 | 0.4315    | 0.6787 | 0.7190 | 16
+WordRep      | 0.7700   | 0.4679 | 0.4032    | 0.5573 | 0.6872 | 14
+Interjection | 0.6719   | 0.6237 | 0.5316    | 0.7545 | 0.6900 | 17
+
+MEAN         | 0.7109   | 0.5617 | 0.4742    | 0.6934 | 0.6768 | -
+
+=====================================================================
+C6 vs PRIOR EXPERIMENTS — BLOCK (reference target)
+=====================================================================
+
+Method                              | F1 (Block) | Notes
+------------------------------------|------------|-------------------------------
+C5: Whisper+HuBERT BiLSTM          | 0.6311     | Best fusion result (reference)
+C6: HuBERT+WavLM-SV CNN-1D (this) | 0.6221     | Speaker embed fusion
+C3: Multi-SSL Transformer           | 0.5674     |
+C2: SSL + handcrafted               | 0.5550     |
+C1: SSL + MFCC                      | 0.5268     |
+
+C6 Mean F1 across 5 targets: 0.5617
+C5 Mean F1 across 5 targets: 0.6282  ← Better (BiLSTM+Attention + Whisper)
+
+=====================================================================
+C6 vs C5 PER-TARGET COMPARISON (F1)
+=====================================================================
+
+Target       | C5 (Whisper+HuBERT BiLSTM) | C6 (HuBERT+WavLM-SV CNN) | Delta
+-------------|----------------------------|---------------------------|------
+Block        | 0.6311                     | 0.6221                    | -0.009
+Prolongation | 0.6168                     | 0.5672                    | -0.050
+SoundRep     | 0.6093                     | 0.5276                    | -0.082
+WordRep      | 0.5679                     | 0.4679                    | -0.100  ← biggest gap
+Interjection | 0.7160                     | 0.6237                    | -0.092
+MEAN         | 0.6282                     | 0.5617                    | -0.067
+
+C5 beats C6 on every target. C6 is closest to C5 on Block (-0.009) and furthest
+on WordRep (-0.100), confirming speaker identity doesn't capture word-level patterns.
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Stream 1 — HuBERT-large:
+  - Model    : facebook/hubert-large-ll60k (layer 21 / 24)
+  - Input dim: 1024 → PCA-32 (train-only, expl. variance ~58.2%)
+
+Stream 2 — WavLM-SV (speaker embeddings):
+  - Model    : microsoft/wavlm-base-plus-sv (94M params)
+  - Method   : Mean-pool last hidden state [B, T_frames, 768] → [B, 768]
+  - Input dim: 768 → PCA-32 (train-only, expl. variance ~66.9%)
+  - Captures : Speaker identity, vocal tract characteristics (VoxCeleb trained)
+
+Fusion strategy:
+  - Concatenation: [HuBERT-PCA32 | WavLM-SV-PCA32] = 64-dim
+  - Architecture : CNN-1D binary classifier
+      Conv1d(1→32, k=7) + BN + GELU
+      Conv1d(32→64, k=5) + BN + GELU
+      Conv1d(64→128, k=3) + BN + GELU → AdaptiveAvgPool(1)
+      Flatten → Dropout(0.3) → Linear(128→64) → GELU → Linear(64→2)
+  - Total params : 44,098
+
+Training:
+  - Loss     : CrossEntropyLoss (neg/pos class weight)
+  - Optimizer: AdamW (lr=3e-4, wd=1e-4)
+  - Scheduler: CosineAnnealingLR (20 epochs, eta_min=1.5e-5)
+  - Batch    : 256, seed=42, 80/20 stratified split
+
+=====================================================================
+KEY INTERPRETATIONS
+=====================================================================
+
+1. SPEAKER IDENTITY ADDS LIMITED VALUE: Adding WavLM-SV speaker embeddings to
+   HuBERT-large PCA-32 gives mean F1=0.5617 — below C5's 0.6282 (Whisper) and
+   also below F1's 0.5497 (focal loss, multi-label, same HuBERT representation).
+   Speaker identity does not provide a strong signal for stutter type classification.
+
+2. BLOCK IS MOST SPEAKER-SENSITIVE: C6's Block F1 (0.622) is closest to C5 (0.631),
+   suggesting that speaker-specific vocal characteristics (e.g. laryngeal tension,
+   airflow patterns) slightly help Block detection. Motor-based stutter types may be
+   more speaker-specific than linguistic ones.
+
+3. INTERJECTION AND WORD REP LEAST SPEAKER-SENSITIVE: WordRep has the largest gap
+   vs C5 (-0.10). Interjection, despite being a linguistic event, also loses more
+   vs C5 than Block (-0.09). This suggests Whisper's linguistic ASR features are
+   far more informative than speaker identity for these classes.
+
+4. HIGH RECALL / LOW PRECISION PATTERN: Block recall=0.838 but precision=0.495 —
+   the model is over-triggering false positives. Block is acoustically heterogeneous
+   (many speakers), and speaker embeddings alone can't distinguish blocked speech
+   from normal variation between speakers.
+
+5. VAL F1 VOLATILE (NOISY TRAINING): Several targets show large epoch-to-epoch
+   fluctuations (e.g. Block ep6=0.51, ep7=0.62, ep8=0.58). This is typical for
+   small CNN models on 64-dim input — the optimisation landscape is noisy.
+
+6. F3 DEPENDENCY NOTED: The tracker lists C6 as a prerequisite for F3 (adversarial
+   speaker disentanglement). The C6 speaker embedding cache (WavLM-SV 768-dim) can
+   be reused directly for F3's GRL-based speaker de-biasing experiments.
+
+=====================================================================
+OUTPUT ARTIFACTS
+=====================================================================
+
+results/tables/c6_run_report.json      — last target (Interjection) config + metrics
+results/tables/c6_train_history.csv    — 20 epochs for last target (Interjection)
+results/figures/c6_train_curves.png    — training curves (last target)
+artifacts/checkpoints/C6/c6_best.pt   — best checkpoint for last target
+artifacts/features/speaker-embed/fold0/embeddings.npy  — WavLM-SV cache (20906 × 768)
+
+Note: JSON/CSV files are overwritten per run (last target = Interjection).
+Per-target metrics captured in this report.
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+✅ DONE — C6 complete. Mean F1=0.5617 across 5 targets.
+   Speaker embeddings provide modest additive value (better than C1-C3 on Block)
+   but do not beat C5's cross-modal Whisper+HuBERT fusion.
+   C6 speaker cache reusable for F3 (adversarial speaker disentanglement).
+
+Week 6 now FULLY CLOSED (C5, F1, F4, C6 all done).
+Running total: 17/35 core experiments.
+
+Next phase — Week 7: D-series deep temporal models
+  D1: HuBERT-large/WavLM-large + Conformer-4block (multi-label)
+  D2: HuBERT-large + BiLSTM + AttnPool (multi-class)
+  D4: HuBERT-large + Transformer (multi-class, Convolution-free)

@@ -1,0 +1,166 @@
+F4 EXPERIMENT REPORT
+====================
+
+Experiment ID: F4
+Title: Multi-label stutter classification — Conformer encoder + BCE loss
+Status: DONE (full dataset, all 5 stutter types simultaneously)
+Run Ref: manual_f4_001
+Date Logged: 2026-03-31
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Primary metric: Macro-F1 (multi-label setting)
+
+Overall metrics:
+  Macro-F1     : 0.54477
+  Micro-F1     : 0.55328
+  Macro-Prec   : 0.45178
+  Macro-Recall : 0.72489
+  Macro-AUPRC  : 0.56053
+  Best epoch   : 26 / 30
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.6055 | 0.5465    | 0.6789 | 0.6091
+  Prolongation  | 0.5779 | 0.4935    | 0.6972 | 0.5986
+  SoundRep      | 0.5007 | 0.3673    | 0.7862 | 0.5115
+  WordRep       | 0.4208 | 0.2888    | 0.7748 | 0.4450
+  Interjection  | 0.6189 | 0.5628    | 0.6875 | 0.6384
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Feature input:
+  - HuBERT-large layer 21 (1024-dim → PCA-32, expl. variance 58.3%)
+  - MFCC-21 (first 21 coefficients from 78-dim stats cache, standardised)
+  - Fused dim: 53  (32 + 21)
+
+Model architecture: Conformer multi-label encoder
+  - Input: [B, 53] → unsqueeze → [B, 53, 1] → Linear(1→64) → [B, 53, 64]
+  - Each of 53 feature positions treated as a 1D "token"
+  - 2× ConformerBlock:
+      FF(half-step) → MHSA(4 heads, d=64) → DepthwiseConv(k=7) → FF(half-step) → LN
+  - AdaptiveAvgPool over 53 positions → [B, 64]
+  - LN → Dropout(0.1) → Linear(64→128) → GELU → Dropout(0.1) → Linear(128→5)
+  - Total params: 202,373
+
+Loss: BCEWithLogitsLoss with pos_weight (class imbalance correction)
+  BCE pos_weight values (neg/pos ratio, train fold only):
+    Block        : 1.3558
+    Prolongation : 2.2999
+    SoundRep     : 3.7511
+    WordRep      : 4.4689   ← highest weight (rarest class)
+    Interjection : 1.7892
+
+Sampling: WeightedRandomSampler (same as F1 for fair comparison)
+
+Training:
+  - Optimizer  : AdamW (lr=3e-4, wd=1e-4)
+  - Scheduler  : CosineAnnealingLR (30 epochs, eta_min=1.5e-5)
+  - Batch size : 256
+  - Threshold  : 0.5 sigmoid decision boundary
+  - Train/test : 80/20 stratified on Block, seed=42
+
+=====================================================================
+F1 vs F4 DIRECT COMPARISON (same data, same split, same sampler)
+=====================================================================
+
+                 | F1 (CNN + Focal)      | F4 (Conformer + BCE)
+  ---------------|----------------------|----------------------
+  Macro-F1       | 0.5497               | 0.5448            ← F1 wins by 0.005
+  Micro-F1       | 0.5583               | 0.5533
+  Macro-Prec     | 0.4577               | 0.4518
+  Macro-Recall   | 0.7262               | 0.7249            ← nearly identical recall
+  Macro-AUPRC    | 0.5812               | 0.5605            ← F1 wins on ranking quality
+  Best epoch     | 28                   | 26
+  Parameters     | 174,597              | 202,373
+
+Per-class Macro-F1 delta (F4 - F1):
+  Block        : +0.010  (F4 slightly better)
+  Prolongation : -0.005  (essentially tied)
+  SoundRep     : -0.012  (F1 better)
+  WordRep      : +0.006  (F4 slightly better)
+  Interjection : -0.023  (F1 clearly better here)
+
+Verdict: F1 (Focal + CNN) narrowly beats F4 (Conformer + BCE) on Macro-F1.
+The Conformer adds 15% more parameters with no net gain in this setup.
+The feature bottleneck (53 dims) may limit what Conformer attention can learn.
+
+=====================================================================
+F1 AND F4 vs C5 COMPARISON (multi-label vs binary)
+=====================================================================
+
+NOTE: C5 trains 5 separate binary classifiers; F1/F4 train one multi-label model.
+      Not directly comparable — presented for reference.
+
+              | C5 (5× binary)  | F1 (multi-label) | F4 (multi-label)
+  ------------|-----------------|------------------|------------------
+  Block       | 0.6311          | 0.5959           | 0.6055
+  Prolongation| 0.6168          | 0.5833           | 0.5779
+  SoundRep    | 0.6093          | 0.5126           | 0.5007
+  WordRep     | 0.5679          | 0.4151           | 0.4208
+  Interjection| 0.7160          | 0.6418           | 0.6189
+  MEAN F1     | 0.6282          | 0.5497           | 0.5448
+
+C5 (binary per-class) outperforms both multi-label experiments on every class.
+Gap is largest on WordRep (0.568 vs 0.415/0.421) — multi-label models struggle
+most with rare, acoustically ambiguous stutter types.
+
+=====================================================================
+KEY INTERPRETATIONS
+=====================================================================
+
+1. CONFORMER ≈ CNN FOR THIS TASK: The Conformer's self-attention over 53 feature
+   positions yields nearly identical results to the CNN-1D in F1. With only 53
+   tokens of dim=1 (projected to 64), there is limited sequence structure for
+   attention to exploit. Conformer advantage likely requires longer input sequences.
+
+2. BCE vs FOCAL LOSS: F1's focal loss (gamma=2) marginally outperforms F4's BCE
+   on Macro-AUPRC (0.581 vs 0.561), meaning focal loss produces better-calibrated
+   probability rankings. BCE's advantage is simpler tuning; focal's advantage is
+   handling extreme class imbalance better.
+
+3. HIGH RECALL PATTERN PERSISTS: Both F1 and F4 show recall >>  precision (0.725
+   vs 0.452). This is a consistent signature of the class-balanced sampler — it
+   aggressively up-weights rare stutter clips, pushing the model to classify
+   positively, which boosts recall but hurts precision.
+
+4. WORD REPETITION CONSISTENTLY HARDEST: WordRep F1 = 0.421 (F4), 0.415 (F1).
+   This class needs full temporal sequence modeling (D-series) rather than
+   pooled features. Cannot be solved by loss function choice alone.
+
+5. TRAINING IS SLOW TO CONVERGE: F4 macro_f1 only reaches 0.42-0.47 in epochs 1-6,
+   then steadily climbs. The Conformer requires more warmup due to attention
+   initialization. Could benefit from warmup LR schedule + 50 epochs.
+
+=====================================================================
+OUTPUT ARTIFACTS
+=====================================================================
+
+results/tables/f4_run_report.json       — full config + all metrics
+results/tables/f4_perclass_results.csv  — per-class F1 / P / R / AUPRC
+results/tables/f4_train_history.csv     — 30 epochs, BCE loss + macro-F1
+results/figures/f4_train_curves.png     — loss + macro-F1 training curves
+results/figures/f4_perclass_f1.png      — per-class F1 bar chart
+artifacts/checkpoints/F4/f4_best.pt    — best checkpoint (epoch 26)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+✅ GO — F4 complete, results logged. Week 6 fully closed.
+   F4 Macro-F1=0.5448, AUPRC=0.5605.
+   F1 (Focal+CNN) is the stronger multi-label baseline (0.5497 Macro-F1).
+   Both are retained as reference points for D-series comparison.
+
+WEEK 6 CLOSED. Experiments completed this week: C5, F1, F4  (3 experiments)
+Running total: 16/35 core experiments done.
+
+Next phase — Week 7: D-series deep temporal models
+  D1: Wav2Vec2-large + BiLSTM temporal classifier
+  D2: HuBERT-large + Transformer sequence classifier
+  D4: Conformer-CTC stutter detector (sequence labelling)

@@ -1,0 +1,159 @@
+F1 EXPERIMENT REPORT
+====================
+
+Experiment ID: F1
+Title: Multi-label stutter classification — Focal Loss + Class-Balanced WeightedRandomSampler
+Status: DONE (full dataset, all 5 stutter types simultaneously)
+Run Ref: manual_f1_001
+Date Logged: 2026-03-31
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Primary metric: Macro-F1 (multi-label setting)
+
+Overall metrics:
+  Macro-F1     : 0.54973
+  Micro-F1     : 0.55833
+  Macro-Prec   : 0.45772
+  Macro-Recall : 0.72624
+  Macro-AUPRC  : 0.58122
+  Best epoch   : 28 / 30
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5959 | 0.5587    | 0.6383 | 0.6180
+  Prolongation  | 0.5833 | 0.4763    | 0.7521 | 0.6225
+  SoundRep      | 0.5126 | 0.3870    | 0.7588 | 0.5245
+  WordRep       | 0.4151 | 0.2846    | 0.7666 | 0.4602
+  Interjection  | 0.6418 | 0.5819    | 0.7154 | 0.6811
+
+=====================================================================
+DATASET STATISTICS
+=====================================================================
+
+Total samples  : 20,906
+Block pos      : 8,874  (42.45%)
+Prolongation   : 6,379  (30.51%)
+SoundRep       : 4,432  (21.20%)
+WordRep        : 3,795  (18.15%)
+Interjection   : 7,535  (36.04%)
+Fluent (all 0) : 4,090  (19.56%)
+
+Note: rows sum >100% because clips can have multiple simultaneous annotations (multi-label).
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Feature input:
+  - HuBERT-large layer 21 (1024-dim → PCA-32, expl. variance 58.3%)
+  - MFCC-21 (first 21 coefficients from 78-dim stats cache, standardised)
+  - Fused dim: 53  (32 + 21)
+
+Model architecture: CNN-1D multi-label
+  - Input reshaped to [B, 1, 53]   (1 channel, 53-length sequence)
+  - Conv1d(1→64, k=7) + BN + GELU
+  - Conv1d(64→128, k=5) + BN + GELU
+  - Conv1d(128→256, k=3) + BN + GELU
+  - AdaptiveAvgPool1d(1) → Flatten → [B, 256]
+  - Dropout(0.3) → Linear(256→128) → GELU
+  - Dropout(0.3) → Linear(128→5)  → (sigmoid at inference)
+  - Total params: 174,597
+
+Loss: Focal Loss (gamma=2.0, per-class alpha)
+  Focal alpha values (inv-frequency weighted, train fold only):
+    Block        : 0.5755
+    Prolongation : 0.6970
+    SoundRep     : 0.7895
+    WordRep      : 0.8171
+    Interjection : 0.6415
+
+Sampling: WeightedRandomSampler
+  - Sample weight = max(inverse class freq) across positive labels
+  - Rare stutter clips (WordRep, SoundRep) upsampled automatically
+
+Training:
+  - Optimizer  : AdamW (lr=3e-4, wd=1e-4)
+  - Scheduler  : CosineAnnealingLR (30 epochs, eta_min=1.5e-5)
+  - Batch size : 256
+  - Threshold  : 0.5 sigmoid decision boundary
+  - Train/test : 80/20 stratified on Block column, seed=42
+
+=====================================================================
+COMPARISON: F1 (multi-label) vs C5 (5× binary)
+=====================================================================
+
+NOTE: These are different problem formulations — not directly comparable.
+C5 trains 5 independent binary classifiers.
+F1 trains one multi-label classifier for all 5 simultaneously.
+
+               | F1 Exp (multi-label)  | C5 Exp (binary per-class)
+  -------------|----------------------|--------------------------
+  Block        | 0.5959               | 0.6311
+  Prolongation | 0.5833               | 0.6168
+  SoundRep     | 0.5126               | 0.6093
+  WordRep      | 0.4151               | 0.5679
+  Interjection | 0.6418               | 0.7160
+  MEAN         | 0.5497               | 0.6282
+
+C5 outperforms F1 on every class. The multi-label setup is strictly
+harder — the model must share capacity across all 5 outputs simultaneously,
+while C5 dedicates a full model to each target.
+
+=====================================================================
+KEY INTERPRETATIONS
+=====================================================================
+
+1. HIGH RECALL, LOW PRECISION: All classes show recall >> precision (avg 0.73 vs 0.46).
+   The focal loss + class-balanced sampler is aggressively pushing the model to detect
+   positives (good for screening) at the cost of false positives. This is directionally
+   correct for clinical use but would cause annotation fatigue.
+
+2. WORD REPETITION REMAINS HARDEST (F1=0.415): Even with focal loss + oversampling,
+   WordRep precision=0.285 is very low. The model is essentially guessing positive for
+   ambiguous clips. WordRep needs richer temporal features (full sequence, not pooled).
+
+3. INTERJECTION REMAINS EASIEST (F1=0.642): Consistent with C5. Lexically stereotyped
+   fillers are learnable even in the multi-label setting.
+
+4. LATE BEST EPOCH (28/30): Unlike C5 which peaked at epoch 4-17, F1 continues
+   improving through epoch 28. Worth retrying with 50 epochs to see if macro-F1
+   breaks 0.56+.
+
+5. AUPRC (0.581 macro): Ranking quality is reasonable given the class imbalance.
+   WordRep has lowest AUPRC (0.460) — the model's confidence for this class is
+   poorly calibrated.
+
+6. TRAINING LOSS STEADILY DECREASING (0.0704 → 0.0596): No overfitting detected —
+   val_loss also decreases throughout. The capacity (174K params) is not too large.
+
+7. PCA-32 BOTTLENECK: Only 58.3% of HuBERT variance retained; combined with the
+   tiny MFCC-21 input, 53 total dims may not capture enough structure. F4 will
+   test a deeper model architecture on this same input.
+
+=====================================================================
+OUTPUT ARTIFACTS
+=====================================================================
+
+results/tables/f1_run_report.json       — full config + all metrics
+results/tables/f1_perclass_results.csv  — per-class F1 / P / R / AUPRC
+results/tables/f1_train_history.csv     — 30 epochs, focal loss + macro-F1
+results/figures/f1_train_curves.png     — loss + macro-F1 training curves
+results/figures/f1_perclass_f1.png      — per-class F1 bar chart
+artifacts/checkpoints/F1/f1_best.pt    — best checkpoint (epoch 28)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+✅ GO — F1 complete, results logged.
+   Macro-F1=0.5497, AUPRC=0.5812. Not better than C5 binary per-class,
+   but establishes the multi-label baseline with focal loss on SEP-28k.
+   Focal loss + balanced sampler achieves high recall — useful for clinical
+   screening applications.
+
+Next must-run: F4 (Multi-label sigmoid head + BCE loss, Conformer architecture)
+After that: D-series (deep temporal models) — Week 7.

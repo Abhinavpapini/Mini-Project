@@ -216,31 +216,31 @@ Output required:
 - Limit each branch to top 2 promoted variants before entering next phase.
 - Reserve at least 20 percent compute budget for final ablations and reruns.
 
-## 10) Status Update (2026-03-31 — 14/35 core experiments done)
+## 10) Status Update (2026-03-31 — 17/35 core experiments done) ✅ WEEK 6 FULLY CLOSED
 
-### ✅ Completed (plan_order 1–14)
-A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5
+### ✅ Completed (plan_order 1–17)
+A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5, C6, F1, F4
 
-### C5 Final Results (all 5 targets)
-| Target | F1 | Accuracy | AUROC | Dominant |
-|---|---|---|---|---|
-| Block | 0.6311 | 0.6528 | 0.6590 | HuBERT |
-| Prolongation | 0.6168 | 0.7367 | 0.7249 | HuBERT |
-| SoundRep | 0.6093 | 0.7948 | 0.7800 | Whisper |
-| WordRep | 0.5679 | 0.8089 | 0.7633 | HuBERT |
-| Interjection | 0.7160 | 0.7936 | 0.7780 | Whisper |
-| **Mean** | **0.6282** | **0.7574** | **0.7410** | Tied |
+### Week 6 FINAL Summary
+| Exp | Method | Mean F1 | Notes |
+|-----|--------|---------|-------|
+| C5 | Whisper+HuBERT BiLSTM×5 binary | **0.6282** | 🏆 Best |
+| C6 | HuBERT+WavLM-SV CNN-1D×5 binary | 0.5617 | Speaker emb adds limited value |
+| F1 | HuBERT+MFCC CNN Focal multi-label | 0.5497 | High recall baseline |
+| F4 | HuBERT+MFCC Conformer BCE multi-label | 0.5448 | ≈F1, more params |
 
-### 🔜 Next Up — Week 6 (remaining)
-1. **C6** — Speaker embedding fusion (HuBERT + ECAPA-TDNN, optional)
-2. **F1** — Focal loss + class-balanced sampling (must-run)
-3. **F4** — Multi-label sigmoid head + BCE (must-run)
+### 🔜 Next — Week 7: D-series Deep Temporal Models
+1. **D1** — HuBERT-large/WavLM-large + Conformer-4block (multi-label, must-run)
+2. **D2** — HuBERT-large + BiLSTM + AttnPool (multi-class, optional)
+3. **D4** — HuBERT-large + Transformer convolution-free (multi-class, must-run)
+4. **D5** — Multi-task: detection + type (must-run)
+5. **D8** — Prototypical network few-shot (optional)
 
 ### Remaining Core-35 Pipeline
-- Weeks 7–8: D1, D2, D4, D5, D8 (deep models)
-- Weeks 9–10: E1, E2, E3, E4 (graph models)
-- Weeks 11–12: B2–B6, B8, F2 (non-linear reductions)
-- Week 13: F3, F5, core-35 closure + final ablations
+- Week 8: D5, D8
+- Weeks 9–10: E1, E2, E3, E4 (graph-based)
+- Weeks 11–12: B2–B6, B8, F2
+- Week 13: F3, F5, closure
 
 ## 11) Completion Definition
 Project is complete only when all are true:

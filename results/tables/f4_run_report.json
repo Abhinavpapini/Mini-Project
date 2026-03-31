@@ -1,0 +1,63 @@
+{
+  "experiment": "F4",
+  "title": "Multi-label stutter: Conformer encoder + BCE loss",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "mfcc_dim": 21,
+  "fused_dim": 53,
+  "d_model": 64,
+  "nhead": 4,
+  "num_blocks": 2,
+  "conv_kernel": 7,
+  "ffn_expansion": 4,
+  "n_params": 202373,
+  "fold": "fold0",
+  "num_samples": 20906,
+  "threshold": 0.5,
+  "epochs": 30,
+  "best_epoch": 26,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "macro_f1": 0.5447667706706872,
+  "micro_f1": 0.5532837670384139,
+  "macro_precision": 0.4517817513966248,
+  "macro_recall": 0.724891423396935,
+  "macro_auprc": 0.5605309189153139,
+  "per_class": {
+    "Block": {
+      "f1": 0.6055276381909548,
+      "precision": 0.546485260770975,
+      "recall": 0.6788732394366197,
+      "auprc": 0.6091254501888705
+    },
+    "Prolongation": {
+      "f1": 0.5779323427126146,
+      "precision": 0.49352051835853133,
+      "recall": 0.6971777269260107,
+      "auprc": 0.5986189564873674
+    },
+    "SoundRep": {
+      "f1": 0.5006983240223464,
+      "precision": 0.3673155737704918,
+      "recall": 0.7861842105263158,
+      "auprc": 0.5115101300838325
+    },
+    "WordRep": {
+      "f1": 0.42078113485630064,
+      "precision": 0.28882144663631765,
+      "recall": 0.7747625508819539,
+      "auprc": 0.4450447025584604
+    },
+    "Interjection": {
+      "f1": 0.6188944135712197,
+      "precision": 0.5627659574468085,
+      "recall": 0.6874593892137751,
+      "auprc": 0.6383553552580388
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\F4\\f4_best.pt",
+  "perclass_csv": "results\\tables\\f4_perclass_results.csv",
+  "history_csv": "results\\tables\\f4_train_history.csv"
+}

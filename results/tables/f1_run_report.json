@@ -1,0 +1,65 @@
+{
+  "experiment": "F1",
+  "title": "Multi-label stutter: Focal Loss + Class-Balanced Sampling",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "mfcc_dim": 21,
+  "fused_dim": 53,
+  "fold": "fold0",
+  "num_samples": 20906,
+  "focal_gamma": 2.0,
+  "focal_alpha": {
+    "Block": 0.5755202174186707,
+    "Prolongation": 0.6969624757766724,
+    "SoundRep": 0.7895240187644958,
+    "WordRep": 0.8171490430831909,
+    "Interjection": 0.6414732933044434
+  },
+  "threshold": 0.5,
+  "epochs": 30,
+  "best_epoch": 28,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "macro_f1": 0.5497257385839629,
+  "micro_f1": 0.5583338529650184,
+  "macro_precision": 0.4577180525342971,
+  "macro_recall": 0.7262400945544003,
+  "macro_auprc": 0.581222353342047,
+  "per_class": {
+    "Block": {
+      "f1": 0.595845385222193,
+      "precision": 0.5586785009861933,
+      "recall": 0.6383098591549295,
+      "auprc": 0.6179621281796037
+    },
+    "Prolongation": {
+      "f1": 0.5832593907128069,
+      "precision": 0.47632850241545893,
+      "recall": 0.7520976353928299,
+      "auprc": 0.6224692875864524
+    },
+    "SoundRep": {
+      "f1": 0.5125925925925926,
+      "precision": 0.3870246085011186,
+      "recall": 0.7587719298245614,
+      "auprc": 0.5244644598129566
+    },
+    "WordRep": {
+      "f1": 0.4151359294636297,
+      "precision": 0.28463476070528965,
+      "recall": 0.7666214382632293,
+      "auprc": 0.4601635017593738
+    },
+    "Interjection": {
+      "f1": 0.6417953949285923,
+      "precision": 0.5819238900634249,
+      "recall": 0.7153996101364523,
+      "auprc": 0.6810523893718483
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\F1\\f1_best.pt",
+  "perclass_csv": "results\\tables\\f1_perclass_results.csv",
+  "history_csv": "results\\tables\\f1_train_history.csv"
+}
