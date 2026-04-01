@@ -216,25 +216,30 @@ Output required:
 - Limit each branch to top 2 promoted variants before entering next phase.
 - Reserve at least 20 percent compute budget for final ablations and reruns.
 
-## 10) Status Update (2026-03-31 — 17/35 core experiments done) ✅ WEEK 6 FULLY CLOSED
+## 10) Status Update (2026-04-01 — 18/35 core experiments done)
 
-### ✅ Completed (plan_order 1–17)
-A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5, C6, F1, F4
+### ✅ Completed (plan_order 1–18)
+A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5, C6, F1, F4, D1
 
-### Week 6 FINAL Summary
+### Week 6 FINAL (closed)
 | Exp | Method | Mean F1 | Notes |
 |-----|--------|---------|-------|
-| C5 | Whisper+HuBERT BiLSTM×5 binary | **0.6282** | 🏆 Best |
-| C6 | HuBERT+WavLM-SV CNN-1D×5 binary | 0.5617 | Speaker emb adds limited value |
+| C5 | Whisper+HuBERT BiLSTM binary×5 | **0.6282** | 🏆 Best binary |
+| C6 | HuBERT+WavLM-SV CNN-1D binary×5 | 0.5617 | Speaker emb limited value |
 | F1 | HuBERT+MFCC CNN Focal multi-label | 0.5497 | High recall baseline |
-| F4 | HuBERT+MFCC Conformer BCE multi-label | 0.5448 | ≈F1, more params |
+| F4 | HuBERT+MFCC Conformer BCE multi-label | 0.5448 | ≈F1 |
 
-### 🔜 Next — Week 7: D-series Deep Temporal Models
-1. **D1** — HuBERT-large/WavLM-large + Conformer-4block (multi-label, must-run)
-2. **D2** — HuBERT-large + BiLSTM + AttnPool (multi-class, optional)
-3. **D4** — HuBERT-large + Transformer convolution-free (multi-class, must-run)
-4. **D5** — Multi-task: detection + type (must-run)
-5. **D8** — Prototypical network few-shot (optional)
+### Week 7 In Progress
+| Exp | Method | Macro-F1 | Notes |
+|-----|--------|----------|-------|
+| D1 ✅ | 4-block Conformer + MLSM (HuBERT PCA-32) | 0.5477 | Best AUPRC (0.602), best precision (0.574) |
+| D2 🔜 | BiLSTM + AttnPool (multi-class, optional) | — | |
+| D4 🔜 | Transformer convolution-free (must-run) | — | |
+| D5 🔜 | Multi-task: detection + type (must-run) | — | |
+
+### 🔜 Next — D2 or D4
+1. **D4** — Convolution-free Transformer, must-run (priority)
+2. **D2** — BiLSTM + AttnPool, optional (interpretable attention)
 
 ### Remaining Core-35 Pipeline
 - Week 8: D5, D8

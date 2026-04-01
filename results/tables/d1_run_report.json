@@ -1,0 +1,59 @@
+{
+  "experiment": "D1",
+  "title": "4-block Conformer + MultiLabelSoftMarginLoss (HuBERT-large PCA-32)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "d_model": 128,
+  "nhead": 8,
+  "num_blocks": 4,
+  "conv_kernel": 7,
+  "n_params": 1561093,
+  "fold": "fold0",
+  "num_samples": 20906,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 30,
+  "best_epoch": 18,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "threshold": 0.5,
+  "macro_f1": 0.547691823391337,
+  "micro_f1": 0.5660003304146705,
+  "macro_precision": 0.5736969890404013,
+  "macro_recall": 0.5259752114223606,
+  "macro_auprc": 0.6016386908626884,
+  "per_class": {
+    "Block": {
+      "f1": 0.5904605263157895,
+      "precision": 0.5750133475707421,
+      "recall": 0.6067605633802817,
+      "auprc": 0.6235863587633077
+    },
+    "Prolongation": {
+      "f1": 0.5701091519731318,
+      "precision": 0.6339869281045751,
+      "recall": 0.5179252479023646,
+      "auprc": 0.6373691998465796
+    },
+    "SoundRep": {
+      "f1": 0.5094972067039106,
+      "precision": 0.5193621867881549,
+      "recall": 0.5,
+      "auprc": 0.5459433718932516
+    },
+    "WordRep": {
+      "f1": 0.4434782608695652,
+      "precision": 0.4758942457231726,
+      "recall": 0.4151967435549525,
+      "auprc": 0.4827168098679934
+    },
+    "Interjection": {
+      "f1": 0.6249139710942877,
+      "precision": 0.6642282370153622,
+      "recall": 0.589993502274204,
+      "auprc": 0.7185777139423095
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D1\\d1_best.pt"
+}
