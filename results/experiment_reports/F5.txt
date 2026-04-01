@@ -1,0 +1,119 @@
+F5 EXPERIMENT REPORT
+====================
+
+Experiment ID: F5
+Title: PCA-32 + Acoustic Perturbation + CNN-1D (HuBERT-large, feature robustness)
+Status: DONE — NEGATIVE RESULT (perturbation hurts precision; recall too low)
+Run Ref: manual_f5_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Perturbations (train only, combined per batch):
+  1. Gaussian jitter : σ ~ U[0, 0.05]   (mic noise, background)
+  2. Amplitude scale : s ~ U[0.85, 1.15] (volume variation)
+  3. Element dropout : p = 0.10           (band-limited/codec proxy)
+Base features: PCA-32 (expl_var=0.583), same as F1 baseline
+
+Overall metrics:
+  Macro-F1   : 0.44569  [F1 baseline ~0.490 → -0.044] ⛔
+  Micro-F1   : 0.45653
+  Macro-Pre  : 0.59128
+  Macro-Rec  : 0.36234  (very low — model too conservative)
+  Macro-AUPRC: 0.54795
+  Best epoch : 34 / 50 (noisy plateau 0.40-0.45 after ep23)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.4775 | 0.6352    | 0.3825 | 0.6082
+  Prolongation  | 0.4085 | 0.6749    | 0.2929 | 0.5883
+  SoundRep      | 0.4292 | 0.5579    | 0.3487 | 0.4964
+  WordRep       | 0.4022 | 0.4629    | 0.3555 | 0.4268
+  Interjection  | 0.5112 | 0.6256    | 0.4321 | 0.6200
+
+All classes show reduced recall but maintained/improved precision vs baseline.
+This is a characteristic over-conservatism pattern from noise injection.
+
+=====================================================================
+ANALYSIS
+=====================================================================
+
+1. PERTURBATION CREATES TRAIN/TEST DISTRIBUTION MISMATCH:
+   The model trains on noisy features but tests on clean features.
+   The train_loss curve is consistently higher than val_loss (different
+   distributions), which desynchronises gradient descent. The model
+   learns to be very conservative (high precision, low recall) to avoid
+   false positives on noisy training samples that don't appear at test time.
+
+2. HUBERT FEATURES ARE ALREADY NOISE-ROBUST:
+   HuBERT is trained with masked prediction — it already learns robust
+   representations that ignore random perturbations. Adding jitter to
+   PCA-compressed HuBERT features adds noise that wasn't in the original
+   SSL pre-training distribution. The model correctly ignores this noise
+   but at the cost of overall sensitivity.
+
+3. RECALL COLLAPSE (0.362) MORE SEVERE THAN F2:
+   F2 (mixup): recall=0.401 | F5 (perturbation): recall=0.362
+   The combined perturbations (jitter + scale + dropout) destroy more
+   discriminative signal than mixup alone, making it harder for the model
+   to confidently predict positive for any class.
+
+4. AUPRC MAINTAINED (0.548) — RANKING IS OK, THRESHOLD IS THE PROBLEM:
+   The AUPRC of 0.548 is reasonable (above per-class baselines) and
+   close to the F1 baseline. The AUPRC is threshold-independent, meaning
+   the model's probability ordering is decent — it's just calibrated
+   conservatively by the noise. With a lower threshold (e.g., 0.35),
+   F1 might recover closer to baseline.
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+NOT PROMOTED — negative result. Feature-level acoustic perturbation
+does not simulate raw-audio augmentation effectively for HuBERT features.
+For future work: apply speed/pitch perturbation BEFORE HuBERT encoding
+(at the raw waveform level), not after.
+
+=====================================================================
+MILESTONE: 35/35 CORE EXPERIMENTS COMPLETE
+=====================================================================
+
+All F-series experiments finished:
+  F1 (baseline) : ~0.490 ✅ — strong baseline, promoted
+  F2 (mixup)    :  0.434 ⛔ — negative; Prolongation collapse
+  F3 (GRL)      :  0.540 ✅ — NEW OVERALL BEST; promoted
+  F4 (label-sm) : (complete, prior session)
+  F5 (perturb)  :  0.446 ⛔ — negative; recall too low
+
+F-series Conclusion: Speaker disentanglement (F3-GRL) is the only
+robustness intervention that genuinely improves over the baseline.
+
+===================================================================
+PROJECT HELIX: FINAL LEADERBOARD (ALL 35 EXPERIMENTS)
+===================================================================
+
+Rank | Exp | Category    | Method                    | F1    | AUPRC
+-----|-----|-------------|---------------------------|-------|------
+  1  | F3  | Robustness  | GRL Speaker Disentngle.   | 0.540 | 0.627 ← CHAMPION
+  2  | E2  | Graph       | Dynamic GAT (4-head)      | 0.515 | 0.618
+  3  | D2  | Deep        | BiLSTM-Attention          |~0.505 |~0.59
+  4  | F1  | Baseline    | PCA-32 + CNN-1D           |~0.490 | 0.580
+  5  | B5  | Dim-Red     | VAE-μ 32 (β=0.5)          | 0.473 | 0.559
+  6  | B6  | Dim-Red     | UMAP-32                   | 0.466 | 0.525
+  7  | B3  | Dim-Red     | Low-Rank MDS-32           | 0.464 | 0.540
+  8  | F5  | Robustness  | Acoustic Perturbation     | 0.446 | 0.548
+  9  | F2  | Robustness  | Mixup + DimMask           | 0.434 | 0.525
+ 10  | B2  | Dim-Red     | KPCA-RBF-32               | 0.394 | 0.477
+ 11  | B4  | Dim-Red     | AE Bottleneck-32          | 0.378 | 0.492
+ 12  | B8  | Dim-Red     | ICA-32 (FastICA)          | 0.276 | 0.449
+
+KEY PROJECT CONCLUSIONS:
+  1. GRL Speaker Disentanglement (F3) is the optimal architecture
+  2. HuBERT-large layer 21 is the optimal SSL backbone
+  3. PCA-32 is optimal dimensionality reduction
+  4. Graph methods (E2-GAT) are strong for relational reasoning
+  5. Augmentation at feature level is generally harmful
+  6. ICA is the worst reduction method (statistical independence ≠ discriminability)

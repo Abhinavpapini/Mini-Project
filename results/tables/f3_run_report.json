@@ -1,0 +1,60 @@
+{
+  "experiment": "F3",
+  "title": "GRL Speaker Disentanglement + CNN-1D (HuBERT-large, adversarial robustness)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "bottleneck_dim": 32,
+  "grl_lambda": 0.5,
+  "lambda_warmup": 10,
+  "n_speakers": 5,
+  "speaker_groups": [
+    "HVSA",
+    "HeStutters",
+    "MyStutteringLife",
+    "StutterTalk",
+    "WomenWhoStutter"
+  ],
+  "n_params": 163562,
+  "epochs": 50,
+  "best_epoch": 47,
+  "macro_f1": 0.539926685115898,
+  "micro_f1": 0.5479275801856447,
+  "macro_precision": 0.6360217225485177,
+  "macro_recall": 0.4693715277859942,
+  "macro_auprc": 0.6271361690891321,
+  "per_class": {
+    "Block": {
+      "f1": 0.5177165354330708,
+      "precision": 0.6197957580518461,
+      "recall": 0.4445070422535211,
+      "auprc": 0.6275343132254965
+    },
+    "Prolongation": {
+      "f1": 0.5202885482416592,
+      "precision": 0.6361631753031973,
+      "recall": 0.4401220442410374,
+      "auprc": 0.6378641042555585
+    },
+    "SoundRep": {
+      "f1": 0.5267080745341615,
+      "precision": 0.6074498567335244,
+      "recall": 0.4649122807017544,
+      "auprc": 0.5777687139981746
+    },
+    "WordRep": {
+      "f1": 0.49106449106449107,
+      "precision": 0.5745454545454546,
+      "recall": 0.4287652645861601,
+      "auprc": 0.5382514359882915
+    },
+    "Interjection": {
+      "f1": 0.6438557763061075,
+      "precision": 0.7421543681085666,
+      "recall": 0.5685510071474984,
+      "auprc": 0.7542622779781394
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\F3\\f3_best.pt"
+}

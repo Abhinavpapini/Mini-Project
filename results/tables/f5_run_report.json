@@ -1,0 +1,53 @@
+{
+  "experiment": "F5",
+  "title": "PCA-32 + Acoustic Perturbation + CNN-1D (HuBERT-large, feature robustness)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "jitter_sigma": 0.05,
+  "scale_range": 0.15,
+  "dropout_p": 0.1,
+  "n_params": 157957,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 50,
+  "best_epoch": 34,
+  "macro_f1": 0.44569021594895375,
+  "micro_f1": 0.45653248936801505,
+  "macro_precision": 0.5912842941383695,
+  "macro_recall": 0.3623439233466723,
+  "macro_auprc": 0.5479490419882772,
+  "per_class": {
+    "Block": {
+      "f1": 0.47749648382559773,
+      "precision": 0.6351730589335828,
+      "recall": 0.38253521126760565,
+      "auprc": 0.6082244166620496
+    },
+    "Prolongation": {
+      "f1": 0.4085106382978723,
+      "precision": 0.6748681898066784,
+      "recall": 0.2929061784897025,
+      "auprc": 0.5883388156281336
+    },
+    "SoundRep": {
+      "f1": 0.4291497975708502,
+      "precision": 0.5578947368421052,
+      "recall": 0.34868421052631576,
+      "auprc": 0.49640983629909935
+    },
+    "WordRep": {
+      "f1": 0.40214888718342284,
+      "precision": 0.4628975265017668,
+      "recall": 0.35549525101763907,
+      "auprc": 0.4267663204575083
+    },
+    "Interjection": {
+      "f1": 0.5111452728670254,
+      "precision": 0.625587958607714,
+      "recall": 0.43209876543209874,
+      "auprc": 0.6200058208945949
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\F5\\f5_best.pt"
+}
