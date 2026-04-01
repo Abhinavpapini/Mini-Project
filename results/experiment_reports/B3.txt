@@ -1,0 +1,107 @@
+B3 EXPERIMENT REPORT
+====================
+
+Experiment ID: B3
+Title: Landmark MDS-32 + CNN-1D (HuBERT-large, distance-preserving reduction)
+Status: DONE — MARGINAL NEGATIVE (MDS-32 < linear PCA-32)
+Run Ref: manual_b3_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Reduction pipeline:
+  HuBERT(1024) → PCA-128 (expl_var=0.800) → Landmark MDS-32
+  → Ridge out-of-sample extension → StandardScaler → CNN-1D
+
+MDS fit:
+  Landmarks: 3000 (subsampled from 16724 train)
+  Stress   : 19,857,190.68  (raw value, not normalised — high)
+  Metric   : Euclidean distances preserved in 32-dim
+
+Overall metrics:
+  Macro-F1   : 0.46428  [linear PCA-32 expected: ~0.49 → -0.026] ⚠️
+  Micro-F1   : 0.49066
+  Macro-Pre  : 0.58277
+  Macro-Rec  : 0.39253
+  Macro-AUPRC: 0.53984
+  Best epoch : 17 / 30 (noisy training, best found early)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5287 | 0.5851    | 0.4823 | 0.5936
+  Prolongation  | 0.4499 | 0.6218    | 0.3524 | 0.5762
+  SoundRep      | 0.4284 | 0.5581    | 0.3476 | 0.5001
+  WordRep       | 0.3509 | 0.5317    | 0.2619 | 0.4201
+  Interjection  | 0.5636 | 0.6172    | 0.5185 | 0.6092
+
+=====================================================================
+B-SERIES DIMENSIONALITY REDUCTION LEADERBOARD
+=====================================================================
+
+Method     | Approach          | Macro-F1 | AUPRC  | Verdict
+-----------|-------------------|----------|--------|--------
+PCA-32(B1) | Max variance      | ~0.490   | ~0.58  | Baseline (best)
+MDS-32(B3) | Dist-preserving   | 0.464    | 0.540  | ⚠️ Marginal neg
+KPCA-RBF(B2)| Non-linear kernel| 0.394    | 0.477  | ⛔ Negative
+
+CLEAR PATTERN: All non-linear reductions (B2, B3) fail to match linear PCA
+for HuBERT features. MDS is less harmful than KPCA but both underperform.
+
+=====================================================================
+WHY MDS UNDERPERFORMS LINEAR PCA
+=====================================================================
+
+1. HIGH MDS STRESS (19.8M) — POOR DISTANCE PRESERVATION:
+   The raw stress value is very high. This means 3000 points in 128-dim
+   cannot be faithfully embedded into 32-dim while preserving all pairwise
+   distances. The 32-dim MDS solution is a heavily distorted representation.
+   PCA-32 (which retains 72.9% variance from PCA-128) captures more useful
+   variation than the distorted MDS distance-map.
+
+2. RIDGE REGRESSION EXTENSION ADDS NOISE:
+   The out-of-sample extension (landmark MDS → Ridge → full dataset) introduces
+   approximation error. The Ridge model can only linearly extrapolate the MDS
+   coordinates. This linear mapping from 128-dim → MDS-32 is essentially
+   a different linear projection — weaker than PCA's guaranteed optimality.
+
+3. TRAINING INSTABILITY (best F1 at ep17, oscillation 0.19-0.467):
+   Similar to B2 — MDS features are harder for CNN to learn from than PCA.
+   The non-monotonic training (ep5=0.19, ep7=0.447, ep10=0.39) suggests the
+   MDS embedding lacks the smooth structure that linear PCA provides.
+
+4. DISTANCE PRESERVATION ≠ CLASS DISCRIMINATION:
+   MDS preserves pairwise distances (geometric fidelity) but this doesn't
+   imply class separability. Linear PCA retains the directions of maximum
+   variance which happen to contain the most inter-class variation for
+   HuBERT features.
+
+=====================================================================
+B-SERIES KEY FINDING (B1 + B2 + B3)
+=====================================================================
+
+⭐ FINDING: For deep SSL features (HuBERT-large), linear PCA is the optimal
+   dimensionality reduction method. Neither kernel-based (B2) nor
+   distance-based (B3) non-linear reductions improve performance.
+
+   Explanation: HuBERT's 24 transformer layers have already performed the
+   necessary non-linear feature transformation. The resulting feature manifold
+   is approximately linear at the macro level — PCA efficiently extracts the
+   discriminative directions. Additional non-linear compression destroys this
+   carefully learned structure.
+
+   Practical guideline: Use simple linear PCA-32 to 64 with HuBERT features.
+   Avoid KPCA (destroys kernel structure) and MDS (poor stress, noisy extension).
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+⚠️ NOT PROMOTED — MDS-32 marginal negative (-0.026 vs PCA baseline).
+   B3 is documented. Linear PCA remains the recommended reduction method.
+   B-series conclusion: PCA is optimal for SSL features (consistent finding).
+
+Running total: 28/35 core experiments done.
+Next: B4 — Autoencoder Bottleneck (learned compression)

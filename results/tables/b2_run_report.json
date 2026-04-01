@@ -1,0 +1,54 @@
+{
+  "experiment": "B2",
+  "title": "Kernel PCA (RBF) + CNN-1D (HuBERT-large, non-linear reduction benchmark)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "kpca_dim": 32,
+  "pre_pca_dim": 128,
+  "kpca_gamma": 0.0012115990793207679,
+  "kpca_fit_samples": 5000,
+  "n_params": 157957,
+  "loss": "MultiLabelSoftMarginLoss",
+  "pca_ref_expl_var": 0.731830894947052,
+  "epochs": 30,
+  "best_epoch": 10,
+  "macro_f1": 0.393515406216851,
+  "micro_f1": 0.42899906454630493,
+  "macro_precision": 0.5163308624217728,
+  "macro_recall": 0.3499207481192318,
+  "macro_auprc": 0.47661306240143925,
+  "per_class": {
+    "Block": {
+      "f1": 0.510519801980198,
+      "precision": 0.5662319835277968,
+      "recall": 0.4647887323943662,
+      "auprc": 0.566088660234691
+    },
+    "Prolongation": {
+      "f1": 0.17323852617970265,
+      "precision": 0.5677966101694916,
+      "recall": 0.10221205186880244,
+      "auprc": 0.45312867090081116
+    },
+    "SoundRep": {
+      "f1": 0.3871866295264624,
+      "precision": 0.5305343511450382,
+      "recall": 0.3048245614035088,
+      "auprc": 0.4561182254230013
+    },
+    "WordRep": {
+      "f1": 0.3843971631205674,
+      "precision": 0.4026745913818722,
+      "recall": 0.3677069199457259,
+      "auprc": 0.379492124852079
+    },
+    "Interjection": {
+      "f1": 0.5122349102773246,
+      "precision": 0.5144167758846658,
+      "recall": 0.5100714749837557,
+      "auprc": 0.5282376305966134
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\B2\\b2_best.pt"
+}

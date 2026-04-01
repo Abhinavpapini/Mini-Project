@@ -1,0 +1,61 @@
+{
+  "experiment": "B5",
+  "title": "\u03b2-VAE latent-32 (\u03bc) + CNN-1D (HuBERT-large, probabilistic latent space)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "latent_dim": 32,
+  "vae_hidden": [
+    512,
+    256,
+    128
+  ],
+  "beta_max": 0.5,
+  "beta_warmup": 20,
+  "vae_params": 1395008,
+  "best_vae_loss": 0.7299089153626694,
+  "vae_epochs": 60,
+  "clf_params": 157957,
+  "clf_epochs": 30,
+  "loss": "MSE+\u03b2*KL (\u03b2_max=0.5) + MultiLabelSoftMarginLoss",
+  "best_clf_epoch": 26,
+  "macro_f1": 0.4730896891257693,
+  "micro_f1": 0.4918159060273445,
+  "macro_precision": 0.6077983151570763,
+  "macro_recall": 0.39012282647717766,
+  "macro_auprc": 0.5585759430362193,
+  "per_class": {
+    "Block": {
+      "f1": 0.4978569073524563,
+      "precision": 0.6001589825119237,
+      "recall": 0.4253521126760563,
+      "auprc": 0.5928760890329838
+    },
+    "Prolongation": {
+      "f1": 0.4774774774774775,
+      "precision": 0.6943231441048034,
+      "recall": 0.36384439359267734,
+      "auprc": 0.6101091360822211
+    },
+    "SoundRep": {
+      "f1": 0.45013123359580054,
+      "precision": 0.5604575163398693,
+      "recall": 0.37609649122807015,
+      "auprc": 0.5011729648619039
+    },
+    "WordRep": {
+      "f1": 0.3672758920800696,
+      "precision": 0.5121359223300971,
+      "recall": 0.2862957937584803,
+      "auprc": 0.4254450397973469
+    },
+    "Interjection": {
+      "f1": 0.5727069351230425,
+      "precision": 0.6719160104986877,
+      "recall": 0.49902534113060426,
+      "auprc": 0.6632764854066403
+    }
+  },
+  "vae_checkpoint": "artifacts\\checkpoints\\B5\\b5_vae.pt",
+  "clf_checkpoint": "artifacts\\checkpoints\\B5\\b5_clf_best.pt"
+}

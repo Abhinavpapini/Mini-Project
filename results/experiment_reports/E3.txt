@@ -1,0 +1,134 @@
+E3 EXPERIMENT REPORT
+====================
+
+Experiment ID: E3
+Title: HGNN Multi-Relational Hyperedges (SSL k-means + MFCC k-means, PCA-32)
+Status: DONE — NEGATIVE RESULT (documented, not promoted)
+Run Ref: manual_e3_001
+Date Logged: 2026-04-01
+
+⛔ E3 MACRO-F1 = 0.333 — BELOW D4 (0.272 min) BUT CONFIRMS HGNN LIMITS
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Hypergraph statistics:
+  Nodes          : 20906
+  SSL hyperedges : 100  (k-means, mean size=209 nodes/cluster)
+  MFCC hyperedges: 50   (k-means, mean size=418 nodes/cluster)
+  Total           : 150 hyperedges
+  Incidence H     : [20906 × 150], 41812 non-zeros, sparsity=0.987
+
+Overall metrics:
+  Macro-F1    : 0.33297   ⛔ 2nd worst multi-label result (only D4 worse)
+  Micro-F1    : 0.39194
+  Macro-Pre   : 0.62920   (high precision — extremely conservative)
+  Macro-Recall: 0.24731   ⛔ WORST recall of any experiment
+  Macro-AUPRC : 0.51615
+  Best epoch  : 200 (still converging — no plateau reached)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5038 | 0.5795    | 0.4456 | 0.5782
+  Prolongation  | 0.3468 | 0.7160    | 0.2288 | 0.5583
+  SoundRep      | 0.2608 | 0.6138    | 0.1656 | 0.4606
+  WordRep       | 0.1175 | 0.6000    | 0.0651 | 0.3754  ← CATASTROPHIC
+  Interjection  | 0.4359 | 0.6367    | 0.3314 | 0.6083
+
+WordRep recall = 0.065 — model almost completely fails to detect WordRep.
+Only ~1 in 15 WordRep clips correctly identified.
+
+=====================================================================
+E3 vs E-SERIES (GRAPH MODELS RANKED)
+=====================================================================
+
+Rank | Exp | Method          | Macro-F1 | Macro-AUPRC | Macro-Rec
+-----|-----|-----------------|----------|-------------|----------
+ 1⭐ | E2  | GAT (4-head)    | 0.5153   | 0.6184      | 0.4240
+ 2   | E1  | GCN (uniform)   | 0.4676   | 0.6023      | 0.3692
+ 3   | E3  | HGNN (clusters) | 0.3330 ❌| 0.5162      | 0.2473
+
+E3 is 7th of 8 non-failed experiments (only D4 worse in raw F1, but D4 had distinct failure mode).
+
+=====================================================================
+ROOT CAUSE ANALYSIS — WHY HGNN FAILED
+=====================================================================
+
+1. HYPEREDGE SIZE TOO LARGE (mean 209 nodes/cluster):
+   Each SSL cluster groups ~209 clips. GCN's k-NN=10 aggregates only 10 neighbours.
+   HGNN aggregates 209× more information → severe over-smoothing.
+   All clips in a large cluster become nearly identical in representation space.
+
+2. MIXED CLUSTER MEMBERSHIP (stutter types not cluster-aligned):
+   Each cluster contains ALL stutter types proportionally to their global frequency.
+   The hyperedge aggregation essentially produces a weighted global mean — not
+   discriminative. The model cannot distinguish Block from Prolongation clips
+   within the same cluster.
+
+   Estimated cluster purity (based on 42% Block rate):
+     Expected Block clips per SSL cluster: 209 × 0.42 = 88 Block + 121 other
+     Even the "right" cluster shares 60% non-target signal.
+
+3. WORDWREP CATASTROPHIC FAILURE (F1=0.118, Recall=0.065):
+   WordRep is the rarest class (18.15%). In each cluster of 209 clips:
+     Expected WordRep = 209 × 0.18 = 38 clips.
+   The MFCC hyperedge (mean 418 clips!) further dilutes minority signal.
+   After HGNN propagation, WordRep embeddings are dominated by majority
+   class features entirely.
+
+4. CONVERGENCE STILL LINEAR AT EPOCH 200:
+   F1 from ep10 (0.034) → ep200 (0.333) is linear with no plateau.
+   Unlike E1/E2 success pattern (fast initial then plateau), E3 shows
+   steady but slow improvement — suggesting the propagation kernel is
+   fundamentally limited, not just undertrained.
+
+5. MFCC CLUSTERS EVEN COARSER (mean 418 nodes):
+   At mean=418 nodes/cluster, each MFCC hyperedge aggregates 2% of the
+   entire dataset. This provides spectral bias information but destroys
+   local stutter discriminability.
+
+=====================================================================
+WHAT WOULD IMPROVE HGNN
+=====================================================================
+
+The architecture is sound but hyperedge construction was too coarse:
+
+Option A: Fine-grained hyperedges (n_clusters=500-1000 instead of 100)
+  - Expected cluster size: 209000/500 = ~42 nodes (closer to k-NN k=10)
+  - Would reduce over-smoothing dramatically
+
+Option B: Label-guided hyperedges (use train labels to build hyperedges)
+  - Build separate hyperedges per stutter type from training labels
+  - Risk: label leakage for test set (requires careful mask handling)
+
+Option C: Hyperedge attention (learnable edge weights within hyperedge)
+  - Instead of uniform incidence, learn per-node-in-hyperedge weights
+  - Reduces but doesn't eliminate over-smoothing
+
+NOT EXPLORED — E3 is documented as a negative result and execution moves to E4.
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Feature input: HuBERT-large layer 21, PCA-32 (0.583 expl_var) + MFCC-21
+Hyperedges: 100 SSL k-means (n_init=5) + 50 MFCC k-means (n_init=5)
+Incidence: H[i,c]=1 iff clip i in cluster c; shared one-hot per node
+Propagation: Theta = D_v^(-1/2) H D_e^(-1) H^T D_v^(-1/2) (factored, [N,M]x[M,N])
+Architecture: HGNN2Layer (32→64→32→5), 6,821 params
+Loss: MultiLabelSoftMarginLoss (train mask), Adam (lr=1e-3)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+⛔ NOT PROMOTED — E3 is a documented negative result.
+   HGNN with coarse k-means hyperedges degrades performance vs GCN/GAT.
+   Root cause: over-smoothing from large cluster hyperedges (mean 209 nodes).
+   Design lesson: hyperedge granularity must match that of k-NN (k≈10-15 nodes).
+   The MFCC multi-relational design is promising but requires finer clustering.
+
+Running total: 25/35 core experiments done.
+Next: E4 — Spatial-Temporal GCN (combined spatial k-NN + temporal episode links)

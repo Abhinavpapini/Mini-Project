@@ -1,0 +1,121 @@
+E4 EXPERIMENT REPORT
+====================
+
+Experiment ID: E4
+Title: Spatial-Temporal GCN — k-NN spatial + within-episode temporal edges (PCA-32)
+Status: DONE — MARGINAL NEGATIVE RESULT (temporal edges did not help)
+Run Ref: manual_e4_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Graph statistics:
+  Nodes             : 20906
+  Spatial edges     : 162,328 undirected (k=10 cosine k-NN)
+  Temporal edges    : 20,648 undirected (sequential within same episode)
+  Combined total    : 364,140 weighted directed edges after symmetrization
+  Temporal weight λ : 0.5 (temporal edges half-weighted vs spatial)
+
+Overall metrics (vs E1 baseline in brackets):
+  Macro-F1    : 0.46181  [E1: 0.46763 → -0.006] ⚠️ slightly worse
+  Micro-F1    : 0.50136  [E1: 0.50511 → -0.004]
+  Macro-Pre   : 0.67468  [E1: 0.67457 → ≈same]
+  Macro-Recall: 0.36355  [E1: 0.36921 → -0.006]
+  Macro-AUPRC : 0.60056  [E1: 0.60229 → -0.002]
+  Best epoch  : 200 (still converging — like E1)
+
+Per-class breakdown (vs E1):
+  Stutter Type  | F1     | Precision | Recall | AUPRC  | ΔF1 vs E1
+  --------------|--------|-----------|--------|--------|----------
+  Block         | 0.5429 | 0.6327    | 0.4755 | 0.6270 | +0.003
+  Prolongation  | 0.4605 | 0.7125    | 0.3402 | 0.6394 | -0.013
+  SoundRep      | 0.4275 | 0.6568    | 0.3169 | 0.5551 | -0.009
+  WordRep       | 0.2760 | 0.6342    | 0.1764 | 0.4598 | -0.008
+  Interjection  | 0.6021 | 0.7373    | 0.5088 | 0.7215 | -0.003
+
+All decreases are small (< 0.013). Only Block shows marginal gain (+0.003).
+
+=====================================================================
+E4 vs E1 ABLATION — TEMPORAL CONTEXT VALUE
+=====================================================================
+
+This is a direct ablation: same GCN architecture (32→64→32→5, 6.7K params),
+same k-NN=10 spatial graph — only difference is adding λ=0.5 temporal edges.
+
+  Metric     | E1 (spatial only) | E4 (spatial+temporal) | Delta
+  -----------|-------------------|----------------------|---------
+  Macro-F1   | 0.46763           | 0.46181              | -0.006
+  Macro-AUPRC| 0.60229           | 0.60056              | -0.002
+  Macro-Prec | 0.67457           | 0.67468              | +0.001
+  Macro-Rec  | 0.36921           | 0.36355              | -0.006
+
+CONCLUSION: Within-episode sequential temporal context provides NO benefit
+for clip-level stutter type classification (marginal -0.006 F1 decrease).
+
+=====================================================================
+FULL E-SERIES LEADERBOARD
+=====================================================================
+
+Rank | Exp | Method          | Macro-F1 | Macro-AUPRC | Key finding
+-----|-----|-----------------|----------|-------------|------------
+ 1⭐ | E2  | GAT (4-head)    | 0.5153   | 0.6184      | Best overall graph
+ 2   | E1  | GCN (k-NN=10)  | 0.4676   | 0.6023      | Best AUPRC baseline
+ 3   | E4  | ST-GCN (+temp) | 0.4618   | 0.6006      | Temporal ≈ no effect
+ 4⛔ | E3  | HGNN (clusters) | 0.3330   | 0.5162      | Over-smoothing failure
+
+E-SERIES CONCLUSION: GAT (E2) > GCN (E1) >> ST-GCN (E4) >> HGNN (E3)
+Attention mechanism (E2) is the only graph variant that materially beats
+the baseline GCN. Hyperedges (E3) and temporal context (E4) both hurt.
+
+=====================================================================
+WHY TEMPORAL EDGES DID NOT HELP
+=====================================================================
+
+1. STUTTER TYPE IS NOT TEMPORALLY CORRELATED WITHIN EPISODES:
+   Adjacent clips in the same podcast episode can have ANY stutter type.
+   A Block event at clip_i doesn't predict Prolongation at clip_{i+1}.
+   The temporal ordering captures conversational flow, not disfluency type.
+
+2. λ=0.5 TEMPORAL WEIGHTING INTRODUCES NOISY SIGNAL:
+   20,648 temporal edges carry diluted information. While not as harmful
+   as E3's coarse hyperedges (mean 209 nodes), temporal neighbours of
+   different stutter types still add noise to the propagated representation.
+
+3. SPATIAL K-NN ALREADY ENCODES THE KEY SIMILARITY:
+   The 162,328 k-NN spatial edges group acoustically similar clips — which
+   implicitly captures some temporal autocorrelation (same speaker in the
+   same session produces similar speech). Adding explicit temporal links is
+   partially redundant AND adds noisy cross-stutter-type connections.
+
+4. CLIP ORDERING NOT STRICTLY TEMPORAL:
+   Clip IDs within an episode don't perfectly guarantee strict time ordering
+   (can depend on dataset construction). Some "temporal" edges may connect
+   clips that are not truly adjacent in time, injecting random noise.
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Features: HuBERT-large layer 21, PCA-32 (expl_var=0.583)
+Spatial edges: k=10 cosine nearest neighbours (162,328 undirected)
+Temporal edges: within-(show,episode) sequential connections (20,648 undirected)
+Combined adjacency: A = A_spatial + 0.5 * A_temporal, then D^(-1/2) normalise
+Architecture: same 2-layer GCN as E1 (32→64→32→head, 6,757 params)
+Loss: MultiLabelSoftMarginLoss (train mask), Adam (lr=1e-3, wd=5e-4)
+Training: 200 epochs full-batch (train mask: 16724 nodes)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+⚠️ NOT PROMOTED — E4 marginally underperforms E1 (-0.006 F1).
+   E4 is documented — temporal context does not benefit clip-level stutter type ID.
+   E-SERIES CLOSED. Best graph model: E2 (GAT, AUPRC=0.6184, F1=0.515).
+
+Running total: 26/35 core experiments done.
+E-SERIES COMPLETE. Winner: E2 (GAT, 4-head attention, PCA-64).
+Next phase: B-series (dimensionality reduction benchmarks)
+  B2: Kernel PCA-RBF
+  B3: Low-Rank MDS

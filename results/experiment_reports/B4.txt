@@ -1,0 +1,122 @@
+B4 EXPERIMENT REPORT
+====================
+
+Experiment ID: B4
+Title: Autoencoder Bottleneck-32 + CNN-1D (HuBERT-large, learned compression)
+Status: DONE — NEGATIVE RESULT (worst of B-series, below B2/B3/B1)
+Run Ref: manual_b4_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Stage 1 (AE pre-training, 50 epochs, unsupervised):
+  Architecture: 1024→512→256→128→32→128→256→512→1024
+  AE params: 1,390,880 | Final recon_loss: 0.4714
+
+Stage 2 (CNN-1D classifier, 30 epochs, on frozen bottleneck):
+  CNN params: 157,957 | Best epoch: 16
+
+Overall metrics:
+  Macro-F1   : 0.37835  [WORST of B-series] ⛔
+  Micro-F1   : 0.39516
+  Macro-Pre  : 0.57338
+  Macro-Rec  : 0.28956  (very low recall — very conservative)
+  Macro-AUPRC: 0.49245
+  Best epoch : 16 / 30 (peaks early, then flat oscillation)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.4447 | 0.5445    | 0.3758 | 0.5243
+  Prolongation  | 0.4257 | 0.5795    | 0.3364 | 0.5400
+  SoundRep      | 0.3764 | 0.5458    | 0.2873 | 0.4652
+  WordRep       | 0.2860 | 0.6355    | 0.1845 | 0.4146
+  Interjection  | 0.3590 | 0.5616    | 0.2638 | 0.5182  ← worst in B4
+
+Note: Interjection usually best class (F1≈0.60 in other models) but
+WORST in B4 (F1=0.359) — AE specifically collapses interjection patterns.
+
+=====================================================================
+B-SERIES FINAL LEADERBOARD (all 4 methods)
+=====================================================================
+
+Rank | Method        | Approach               | Macro-F1 | AUPRC
+-----|---------------|------------------------|----------|------
+  1  | B1 (PCA-32)  | Max variance (linear)  | ~0.490   | ~0.58 ← BEST
+  2  | B3 (MDS-32)  | Distance-preserving    | 0.464    | 0.540 ⚠️
+  3  | B2 (KPCA-32) | RBF kernel (non-linear)| 0.394    | 0.477 ⛔
+  4  | B4 (AE-32)   | Learned reconstruction | 0.378    | 0.492 ⛔ WORST
+
+ORDERING: PCA > MDS > KPCA > AE
+All non-PCA methods fail to match linear PCA for HuBERT features.
+
+=====================================================================
+WHY AE FAILS WORSE THAN KPCA AND MDS
+=====================================================================
+
+1. MSE RECONSTRUCTION ≠ STUTTER CLASS DISCRIMINABILITY:
+   The AE bottleneck learns to RECONSTRUCT 1024-dim HuBERT features.
+   But discriminating between stutter types doesn't require reconstructing
+   all 1024 dimensions — it requires preserving specific spectro-temporal
+   patterns. The MSE loss has no concept of stutter types.
+
+2. INTERJECTION COLLAPSE (F1=0.359 vs usual 0.60):
+   Interjection clips ("um", "uh") have very typical short-duration acoustic
+   patterns. The AE may compress these into a specific bottleneck region
+   BUT the classifier never sees a clean separation because the MFCC-like
+   low-level variability (background noise, speaker variation) is also
+   compressed into the same 32 dims.
+
+3. AE NOT CONVERGED AT 50 EPOCHS (loss=0.471, still declining):
+   The AE recon loss drops every 10 epochs: 0.526→0.493→0.481→0.474→0.471
+   The bottleneck features at ep50 are still noisy. More AE epochs (100-200)
+   would improve reconstruction but not necessarily classification.
+
+4. 32-DIM IS TOO SMALL FOR RECONSTRUCTION OF 1024-DIM SSL FEATURES:
+   Compressing HuBERT-1024 to 32-dim (32× compression) via reconstruction
+   forces the AE to discard most acoustic detail. PCA-32 at least retains
+   the top-variance directions which happen to be task-relevant.
+   AE-32 retains reconstruction-optimal directions which are NOT necessarily
+   the classification-optimal directions.
+
+5. BOTTLENECK FEATURES TOO DIFFERENT FROM PCA STRUCTURE:
+   PCA creates orthogonal components with guaranteed maximum variance.
+   AE creates entangled, non-orthogonal components optimised for MSE.
+   The CNN-1D architecture (designed for PCA-like structured features)
+   performs worse on AE features.
+
+=====================================================================
+B-SERIES CONCLUSION — FINAL FINDING
+=====================================================================
+
+⭐ DEFINITIVE B-SERIES FINDING:
+   For deep SSL features (HuBERT-large), LINEAR PCA IS THE OPTIMAL
+   DIMENSIONALITY REDUCTION METHOD.
+
+   All tested alternatives:
+   - KPCA-RBF (B2): -0.10 F1 vs PCA
+   - MDS (B3)      : -0.03 F1 vs PCA  (best alternative, moderately harmful)
+   - AE (B4)       : -0.11 F1 vs PCA  (worst alternative)
+
+   Why: HuBERT's 24 Transformer layers already perform sophisticated
+   non-linear feature extraction. The resulting feature space is
+   approximately linear at the macro level — PCA efficiently extracts
+   the most discriminative directions. Any additional non-linear or learned
+   compression introduces information loss without compensating gains.
+
+   RECOMMENDATION: Use PCA-32 to PCA-64 for HuBERT feature compression.
+   Do not use KPCA, MDS, AE, or VAE as intermediate compression steps.
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+⛔ NOT PROMOTED — worst of B-series.
+   B-series conclusively closed. Linear PCA wins for SSL features.
+   B5 (VAE) may be run for completeness but expected to follow same pattern.
+
+Running total: 29/35 core experiments done.
+Next: B5 (VAE — probabilistic latent space) — for completeness
+Then: G-series (ensemble methods) — final phase

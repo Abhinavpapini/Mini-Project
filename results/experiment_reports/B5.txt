@@ -1,0 +1,106 @@
+B5 EXPERIMENT REPORT
+====================
+
+Experiment ID: B5
+Title: β-VAE latent-32 (μ) + CNN-1D (HuBERT-large, probabilistic latent space)
+Status: DONE — MARGINAL NEGATIVE vs PCA, BEST of non-PCA methods
+Run Ref: manual_b5_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Stage 1 (β-VAE, 60 epochs, β_max=0.5, β warmup=20 epochs):
+  Architecture: 1024→512→256→128→(μ,σ²):32→128→256→512→1024
+  VAE params: 1,395,008
+  KL stabilised at: kl=0.226 (good — no posterior collapse)
+  Best total_loss: 0.7299 | Final recon: 0.638 | Final KL: 0.226
+
+Stage 2 (CNN-1D classifier, 30 epochs, on frozen μ):
+  CNN params: 157,957 | Best epoch: 26
+
+Overall metrics:
+  Macro-F1   : 0.47309  [best non-PCA! PCA baseline ≈ 0.490 → only -0.017] 🥈
+  Micro-F1   : 0.49182
+  Macro-Pre  : 0.60780
+  Macro-Rec  : 0.39012
+  Macro-AUPRC: 0.55858
+  Best epoch : 26 / 30
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.4979 | 0.6002    | 0.4254 | 0.5929
+  Prolongation  | 0.4775 | 0.6943    | 0.3638 | 0.6101  ← best Prolongation AUPRC in B-series
+  SoundRep      | 0.4501 | 0.5605    | 0.3761 | 0.5012
+  WordRep       | 0.3673 | 0.5121    | 0.2863 | 0.4255
+  Interjection  | 0.5727 | 0.6719    | 0.4990 | 0.6633  ← strong
+
+=====================================================================
+COMPLETE B-SERIES FINAL LEADERBOARD
+=====================================================================
+
+Rank | Method       | Approach              | F1    | AUPRC  | Gap vs PCA
+-----|--------------|----------------------|-------|--------|----------
+  1  | B1 PCA-32   | Max variance (linear)| ~0.490| ~0.58  | —  ← CHAMPION
+  2  | B5 VAE-32 μ | Probabilistic latent | 0.473 | 0.559  | -0.017 (close!)
+  3  | B3 MDS-32   | Distance-preserving  | 0.464 | 0.540  | -0.026
+  4  | B2 KPCA-32  | RBF kernel           | 0.394 | 0.477  | -0.096 ⛔
+  5  | B4 AE-32    | Reconstruction       | 0.378 | 0.492  | -0.112 ⛔ worst
+
+ORDERING: PCA >> VAE-μ ≈ MDS >> KPCA > AE
+
+=====================================================================
+WHY VAE BEATS AE (B5 > B4 by +0.095 F1)
+=====================================================================
+
+1. KL REGULARISATION → STRUCTURED LATENT SPACE:
+   VAE's KL(q||p) ≡ N(0,1) prior incentivises each latent dim to be
+   independent and carry distinct information. This disentanglement makes
+   it easier for the CNN-1D to selectively activate on stutter-type-relevant
+   dimensions. AE has no such constraint → entangled, noisy dimensions.
+
+2. β ANNEALING PREVENTS POSTERIOR COLLAPSE:
+   Without annealing, β=0.5 from epoch 1 → KL forces all μ→0 before
+   the decoder learns meaningful mappings (posterior collapse). The warmup
+   (β=0 → 0.5 over 20 epochs) allows the encoder to first learn useful
+   reconstructions, then gradually regularise. KL stabilised at 0.226
+   (not zero → no collapse).
+
+3. PROBABILISTIC BOTTLENECK = BETTER GENERALISATION:
+   The stochastic training (z = μ + σε) acts as data augmentation in
+   latent space — each forward pass applies small perturbations around μ.
+   This prevents the encoder from overfitting to training noise, resulting
+   in latent representations that generalise better to test clips.
+
+4. INTERJECTION RECOVERY (F1=0.573 vs B4's 0.359):
+   B4's deterministic AE collapsed Interjection patterns. VAE's structured
+   prior maintains these in distinct latent regions. Interjection is now
+   the highest-performing class again (as in most other experiments).
+
+=====================================================================
+B-SERIES KEY FINDING (DEFINITIVE — B1 through B5)
+=====================================================================
+
+✅ FINAL B-SERIES INSIGHT:
+   1. Linear PCA is the optimal compression for HuBERT SSL features.
+   2. Among learned methods, VAE (probabilistic) > AE (deterministic).
+      KL regularisation matters — unstructured reconstruction hurts.
+   3. Kernel/distance methods (KPCA, MDS) are inferior to learned (VAE).
+   4. The VAE-μ at 0.473 is only 3.5% below PCA — acceptable in applications
+      where interpretability of the latent space is valued.
+
+   For STUTTER TYPE CLASSIFICATION: Use PCA-32. For interpretability
+   or generative applications: Use β-VAE (B5 settings: β=0.5, warmup=20).
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+⚠️ NOT PROMOTED (vs PCA) but closest among all alternatives.
+   B-series FULLY COMPLETE. PCA wins. VAE is best runner-up.
+
+Running total: 30/35 core experiments done.
+Next: B6 — UMAP (Week 12 start, topology-preserving reduction)
+Then: Experiments 32-35 (G/F-series, ensemble/advanced)

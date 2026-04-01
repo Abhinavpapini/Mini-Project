@@ -1,0 +1,59 @@
+{
+  "experiment": "B4",
+  "title": "AE Bottleneck-32 + CNN-1D (HuBERT-large, learned compression)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "bottleneck_dim": 32,
+  "ae_hidden_dims": [
+    512,
+    256,
+    128
+  ],
+  "ae_params": 1390880,
+  "best_ae_loss": 0.4711810146128553,
+  "ae_epochs": 50,
+  "clf_params": 157957,
+  "clf_epochs": 30,
+  "loss": "MSE (AE) + MultiLabelSoftMarginLoss (clf)",
+  "best_clf_epoch": 16,
+  "macro_f1": 0.3783536408543697,
+  "micro_f1": 0.39516379043091865,
+  "macro_precision": 0.5733773811883403,
+  "macro_recall": 0.28955586846836806,
+  "macro_auprc": 0.4924474425669258,
+  "per_class": {
+    "Block": {
+      "f1": 0.44466666666666665,
+      "precision": 0.5444897959183673,
+      "recall": 0.37577464788732395,
+      "auprc": 0.5242803586957273
+    },
+    "Prolongation": {
+      "f1": 0.42567567567567566,
+      "precision": 0.5795006570302234,
+      "recall": 0.33638443935926776,
+      "auprc": 0.5400158394831099
+    },
+    "SoundRep": {
+      "f1": 0.3764367816091954,
+      "precision": 0.5458333333333333,
+      "recall": 0.28728070175438597,
+      "auprc": 0.4651890418753405
+    },
+    "WordRep": {
+      "f1": 0.28601472134595163,
+      "precision": 0.6355140186915887,
+      "recall": 0.18453188602442333,
+      "auprc": 0.4145832031470911
+    },
+    "Interjection": {
+      "f1": 0.358974358974359,
+      "precision": 0.5615491009681881,
+      "recall": 0.26380766731643923,
+      "auprc": 0.5181687696333606
+    }
+  },
+  "ae_checkpoint": "artifacts\\checkpoints\\B4\\b4_ae.pt",
+  "clf_checkpoint": "artifacts\\checkpoints\\B4\\b4_clf_best.pt"
+}
