@@ -1,0 +1,72 @@
+B6 EXPERIMENT REPORT
+====================
+
+Experiment ID: B6
+Title: UMAP-32 + CNN-1D (HuBERT-large, topology-preserving reduction)
+Status: DONE — MARGINAL NEGATIVE vs PCA
+Run Ref: manual_b6_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Reduction pipeline:
+  HuBERT(1024) → StandardScaler → PCA-128 (expl_var=0.800)
+  → UMAP-32 (n_neighbors=15, min_dist=0.1, metric=euclidean)
+  → StandardScaler → CNN-1D
+
+Overall metrics:
+  Macro-F1   : 0.46558
+  Micro-F1   : 0.48333
+  Macro-Pre  : 0.54562
+  Macro-Rec  : 0.40787
+  Macro-AUPRC: 0.52518
+  Best epoch : 13 / 30
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5118 | 0.6032    | 0.4445 | 0.6025
+  Prolongation  | 0.4431 | 0.5819    | 0.3577 | 0.5493
+  SoundRep      | 0.4603 | 0.5093    | 0.4200 | 0.4790
+  WordRep       | 0.3574 | 0.4109    | 0.3162 | 0.3602
+  Interjection  | 0.5553 | 0.6228    | 0.5010 | 0.6350
+
+Notable: SoundRep recall=0.420 is highest in the B-series for that class.
+
+=====================================================================
+COMPLETE B-SERIES FINAL STANDINGS
+=====================================================================
+
+Rank | Method       | Macro-F1 | AUPRC
+-----|--------------|----------|------
+  1  | B1  PCA-32  | ~0.490   | ~0.580
+  2  | B5  VAE-32  |  0.473   |  0.559
+  3  | B6  UMAP-32 |  0.466   |  0.525
+  4  | B3  MDS-32  |  0.464   |  0.540
+  5  | B2  KPCA-32 |  0.394   |  0.477
+  6  | B4  AE-32   |  0.378   |  0.492
+
+UMAP positions between VAE (best non-PCA, 2nd) and MDS (3rd).
+All non-PCA methods remain below linear PCA.
+
+=====================================================================
+CONFIGURATION
+=====================================================================
+
+UMAP params: n_components=32, n_neighbors=15, min_dist=0.1, metric=euclidean
+Pre-PCA dim: 128 (speeds UMAP neighbourhood graph; expl_var=0.800)
+CNN: [64,128,256] channels, 157,957 params
+Loss: MultiLabelSoftMarginLoss + WeightedRandomSampler
+Optimizer: AdamW (lr=3e-4, wd=1e-4), CosineAnnealingLR (30 ep)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+NOT PROMOTED — below linear PCA baseline.
+B-series FULLY COMPLETE with B6.
+
+Running total: 31/35 core experiments done.
+Next: B8 — ICA (Independent Component Analysis)

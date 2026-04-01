@@ -1,0 +1,54 @@
+{
+  "experiment": "B8",
+  "title": "FastICA-32 + CNN-1D (HuBERT-large, independent component reduction)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "pre_pca_dim": 128,
+  "ica_dim": 32,
+  "ica_algo": "parallel",
+  "ica_fun": "logcosh",
+  "ica_max_iter": 500,
+  "n_params": 157957,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 30,
+  "best_epoch": 19,
+  "macro_f1": 0.27579818852796667,
+  "micro_f1": 0.3134547923503451,
+  "macro_precision": 0.5746717959910871,
+  "macro_recall": 0.2030714837041076,
+  "macro_auprc": 0.44869588669432303,
+  "per_class": {
+    "Block": {
+      "f1": 0.45733788395904434,
+      "precision": 0.5089779005524862,
+      "recall": 0.4152112676056338,
+      "auprc": 0.5008348299555287
+    },
+    "Prolongation": {
+      "f1": 0.10202655485674354,
+      "precision": 0.6083333333333333,
+      "recall": 0.05568268497330282,
+      "auprc": 0.4458141365066408
+    },
+    "SoundRep": {
+      "f1": 0.3049056603773585,
+      "precision": 0.4891041162227603,
+      "recall": 0.22149122807017543,
+      "auprc": 0.39863756807354456
+    },
+    "WordRep": {
+      "f1": 0.24702058504875407,
+      "precision": 0.6129032258064516,
+      "recall": 0.1546811397557666,
+      "auprc": 0.37278958119635874
+    },
+    "Interjection": {
+      "f1": 0.2677002583979328,
+      "precision": 0.6540404040404041,
+      "recall": 0.1682910981156595,
+      "auprc": 0.5254033177395426
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\B8\\b8_best.pt"
+}

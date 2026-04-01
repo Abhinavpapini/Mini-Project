@@ -1,0 +1,97 @@
+B8 EXPERIMENT REPORT
+====================
+
+Experiment ID: B8
+Title: FastICA-32 + CNN-1D (HuBERT-large, independent component reduction)
+Status: DONE — STRONG NEGATIVE RESULT
+Run Ref: manual_b8_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Reduction pipeline:
+  HuBERT(1024) → StandardScaler → PCA-128 (expl_var=0.800)
+  → FastICA-32 (algo=parallel, fun=logcosh, max_iter=500)
+  → StandardScaler → CNN-1D
+
+Overall metrics:
+  Macro-F1   : 0.27580  [second-worst in B-series after B4=0.378 → actually WORST overall]
+  Micro-F1   : 0.31345
+  Macro-Pre  : 0.57467  (precision ok — model makes very few positive predictions)
+  Macro-Rec  : 0.20307  (recall catastrophically low)
+  Macro-AUPRC: 0.44870
+  Best epoch : 19 / 30 (extremely noisy, never converges properly)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.4573 | 0.5090    | 0.4152 | 0.5008  ← only reasonable class
+  Prolongation  | 0.1020 | 0.6083    | 0.0557 | 0.4458  ← catastrophic recall
+  SoundRep      | 0.3049 | 0.4891    | 0.2215 | 0.3986
+  WordRep       | 0.2470 | 0.6129    | 0.1547 | 0.3728
+  Interjection  | 0.2677 | 0.6540    | 0.1683 | 0.5254  ← usually best class
+
+B8 is the WORST classification result in the entire B-series.
+Macro-F1=0.276 is even below KPCA (0.394) and AE (0.378).
+
+=====================================================================
+WHY ICA FAILS
+=====================================================================
+
+1. ICA MAXIMISES INDEPENDENCE, NOT DISCRIMINABILITY:
+   FastICA finds statistically independent components (maximises non-Gaussianity
+   via logcosh contrast function). These independent sources may correspond to
+   distinct acoustic generators (speaker tract, noise, background), but they
+   do NOT correspond to stutter-type dimensions — stutter events are products
+   of multiple simultaneous acoustic factors (articulatory + respiratory).
+
+2. CATASTROPHICALLY LOW RECALL (Macro-Rec=0.203):
+   With precision=0.575 but recall=0.203, the model is extremely conservative —
+   it only predicts positive when absolutely certain. This suggests the ICA-32
+   components produce very uneven feature distributions per class, making
+   threshold calibration very difficult.
+
+3. PROLONGATION COLLAPSE (F1=0.102, Recall=0.056):
+   Prolongation's acoustic signature (vowel elongation) spans multiple ICA
+   components simultaneously. No single component or combination is predictive,
+   leading to near-total failure. Recall=5.6% means almost all Prolongation
+   clips are missed.
+
+4. ICA SOLUTION IS NOT UNIQUE (sign/order ambiguity):
+   FastICA components have sign ambiguity (±) and are unordered. This makes
+   the 32 components harder for the CNN to interpret than PCA's ordered,
+   sign-consistent components sorted by explained variance.
+
+5. TRAINING NEVER CONVERGES (F1 oscillates 0.03-0.28 over 30 epochs):
+   The ICA feature space is not smooth enough for the CNN to find stable
+   decision boundaries. The model finds no consistent direction of improvement.
+
+=====================================================================
+FINAL COMPLETE B-SERIES LEADERBOARD (ALL METHODS)
+=====================================================================
+
+Rank | Method       | Macro-F1 | AUPRC
+-----|--------------|----------|------
+  1  | B1  PCA-32  | ~0.490   | ~0.580  ← CHAMPION
+  2  | B5  VAE-32  |  0.473   |  0.559
+  3  | B6  UMAP-32 |  0.466   |  0.525
+  4  | B3  MDS-32  |  0.464   |  0.540
+  5  | B2  KPCA-32 |  0.394   |  0.477
+  6  | B4  AE-32   |  0.378   |  0.492
+  7  | B8  ICA-32  |  0.276   |  0.449  ← WORST
+
+Complete ordering: PCA > VAE > UMAP ≈ MDS > KPCA > AE >> ICA
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+NOT PROMOTED — strong negative result. ICA is the worst dimensionality
+reduction method tested. Statistical independence ≠ stutter discriminability.
+B-series definitively closed. Linear PCA remains the optimal choice.
+
+Running total: 32/35 core experiments done.
+Next: F2 — Embedding augmentation (mixup + feature masking)
+Remaining after F2: F3, F5

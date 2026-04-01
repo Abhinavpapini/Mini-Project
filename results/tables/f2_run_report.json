@@ -1,0 +1,53 @@
+{
+  "experiment": "F2",
+  "title": "PCA-32 + Mixup + DimMask + CNN-1D (HuBERT-large, feature augmentation)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "mixup_alpha": 0.3,
+  "mask_ratio": 0.2,
+  "mask_block_size": 4,
+  "n_params": 157957,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 50,
+  "best_epoch": 17,
+  "macro_f1": 0.4339164258989133,
+  "micro_f1": 0.4522723124657784,
+  "macro_precision": 0.5563122863947693,
+  "macro_recall": 0.400975630607174,
+  "macro_auprc": 0.5247865503830951,
+  "per_class": {
+    "Block": {
+      "f1": 0.5081116158338741,
+      "precision": 0.5990818668706962,
+      "recall": 0.4411267605633803,
+      "auprc": 0.5970811014188191
+    },
+    "Prolongation": {
+      "f1": 0.2871165644171779,
+      "precision": 0.7335423197492164,
+      "recall": 0.17848970251716248,
+      "auprc": 0.5498691130384223
+    },
+    "SoundRep": {
+      "f1": 0.43444730077120824,
+      "precision": 0.5248447204968945,
+      "recall": 0.3706140350877193,
+      "auprc": 0.48390715788212085
+    },
+    "WordRep": {
+      "f1": 0.4215481171548117,
+      "precision": 0.34297872340425534,
+      "recall": 0.5468113975576662,
+      "auprc": 0.40930898657282555
+    },
+    "Interjection": {
+      "f1": 0.5183585313174947,
+      "precision": 0.5811138014527845,
+      "recall": 0.4678362573099415,
+      "auprc": 0.5837663930032881
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\F2\\f2_best.pt"
+}

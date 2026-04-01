@@ -1,0 +1,79 @@
+F2 EXPERIMENT REPORT
+====================
+
+Experiment ID: F2
+Title: PCA-32 + Mixup + DimMask + CNN-1D (HuBERT-large, feature augmentation)
+Status: DONE — NEGATIVE RESULT (augmentation hurts minority class precision)
+Run Ref: manual_f2_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Augmentation: Mixup (α=0.3, Beta-sampled) + DimMask (ratio=0.2, block=4)
+Applied: training only | Eval: always clean (no augmentation)
+Base features: PCA-32 (expl_var=0.583), same as F1 baseline
+
+Overall metrics:
+  Macro-F1   : 0.43392  [F1 baseline ~0.49 → -0.056] ⛔
+  Micro-F1   : 0.45227
+  Macro-Pre  : 0.55631
+  Macro-Rec  : 0.40098
+  Macro-AUPRC: 0.52479
+  Best epoch : 17 / 50 (peaks early, oscillates 0.38-0.43 thereafter)
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5081 | 0.5991    | 0.4411 | 0.5971
+  Prolongation  | 0.2871 | 0.7335    | 0.1785 | 0.5499  ← severely damaged
+  SoundRep      | 0.4345 | 0.5248    | 0.3706 | 0.4839
+  WordRep       | 0.4216 | 0.3430    | 0.5468 | 0.4093  ← BEST recall across series!
+  Interjection  | 0.5184 | 0.5811    | 0.4678 | 0.5838
+
+Notable: WordRep recall=0.547 — highest recall for WordRep across all experiments.
+         Prolongation F1=0.287 — badly damaged by mixup interpolation.
+
+=====================================================================
+ANALYSIS
+=====================================================================
+
+1. MIXUP HURTS PROLONGATION (F1: ~0.47 → 0.287):
+   Prolongation clips (elongated vowels) are created by interpolating with
+   non-Prolongation clips. The resulting synthetic samples are acoustically
+   ambiguous — partial vowel elongation that doesn't match real stutter patterns.
+   With only 30.5% positive rate, mixed samples often produce pseudo-negatives
+   (low λ × Prolongation feature + high (1-λ) × non-stutter). The classifier
+   learns to be conservative → recall collapses to 17.8%.
+
+2. MIXUP HELPS WORDREP (Recall: ~0.26 → 0.547):
+   WordRep has the lowest prevalence (18.2%). Mixup creates synthetic WordRep-
+   positive samples by interpolating with other stutter types, effectively
+   upsampling with context. This dramatically improves recall (0.547 > all
+   prior experiments) but at cost of precision (0.343 — many false positives).
+
+3. TRAINING INSTABILITY (best at ep17, then flat 0.38-0.43 over 33 epochs):
+   Mixup soft labels make the gradient signal noisier than hard labels.
+   Combined with DimMask, the effective training signal is quite weak.
+   The model finds a locally good solution at ep17 but can't improve further
+   due to the augmented training distribution mismatch.
+
+4. DIM-MASK MAY BE TOO AGGRESSIVE FOR 32-DIM FEATURES:
+   Masking 20% of 32 dimensions = masking ~6-7 dims per sample. For a 32-dim
+   PCA space where each dim is principal component, losing 6 dims means
+   losing 6/32 = 18.75% of total variance. This is very significant.
+   A smaller mask_ratio (0.05-0.10) might work better.
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+NOT PROMOTED — augmentation degrades Prolongation significantly.
+Feature-space Mixup is not suitable when:
+  - Class prevalence is very unequal
+  - Classes are acoustically incompatible (Prolongation ≠ Fluent interpolation)
+
+Running total: 33/35 core experiments done.
+Next: F3 — Adversarial speaker disentanglement (GRL)
+Then: F5 — Feature-level acoustic perturbation augmentation
