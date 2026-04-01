@@ -216,35 +216,32 @@ Output required:
 - Limit each branch to top 2 promoted variants before entering next phase.
 - Reserve at least 20 percent compute budget for final ablations and reruns.
 
-## 10) Status Update (2026-04-01 — 18/35 core experiments done)
+## 10) Status Update (2026-04-01 — 20/35 core experiments done)
 
-### ✅ Completed (plan_order 1–18)
-A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5, C6, F1, F4, D1
+### ✅ Completed (plan_order 1–20)
+A1, A2, A3, A4, A5, A6, A7, A8, B1, B7, C1, C2, C3, C5, C6, F1, F4, D1, D4, D5
 
-### Week 6 FINAL (closed)
-| Exp | Method | Mean F1 | Notes |
-|-----|--------|---------|-------|
-| C5 | Whisper+HuBERT BiLSTM binary×5 | **0.6282** | 🏆 Best binary |
-| C6 | HuBERT+WavLM-SV CNN-1D binary×5 | 0.5617 | Speaker emb limited value |
-| F1 | HuBERT+MFCC CNN Focal multi-label | 0.5497 | High recall baseline |
-| F4 | HuBERT+MFCC Conformer BCE multi-label | 0.5448 | ≈F1 |
+### D-Series Final Summary (Week 7-8 CLOSED)
+| Exp | Method | Macro-F1 | Verdict |
+|-----|--------|----------|---------|
+| D1 ✅ | 4-block Conformer + MLSM | **0.5477** | ✅ Promoted — best AUPRC (0.602) |
+| D4 ✅ | Conv-free Transformer + MLSM | 0.2719 | ⛔ FAIL — conv is critical |
+| D5 ✅ | Multi-task CNN (detect+type) | 0.4894 type | ✅ Unique: detect AUROC=0.811 |
+| D2 🔜 | BiLSTM + AttnPool | — | Optional — can skip |
 
-### Week 7 In Progress
-| Exp | Method | Macro-F1 | Notes |
-|-----|--------|----------|-------|
-| D1 ✅ | 4-block Conformer + MLSM (HuBERT PCA-32) | 0.5477 | Best AUPRC (0.602), best precision (0.574) |
-| D2 🔜 | BiLSTM + AttnPool (multi-class, optional) | — | |
-| D4 🔜 | Transformer convolution-free (must-run) | — | |
-| D5 🔜 | Multi-task: detection + type (must-run) | — | |
+**D-series finding:** Depthwise conv (Conformer) is the critical inductive bias.
+Multi-task learning uniquely provides detection AUROC=0.811 (clinical value).
 
-### 🔜 Next — D2 or D4
-1. **D4** — Convolution-free Transformer, must-run (priority)
-2. **D2** — BiLSTM + AttnPool, optional (interpretable attention)
+### 🔜 Next Phase — E-series (Week 9-10: Graph Models)
+1. **E1** — GCN temporal graph (must-run)
+2. **E2** — Dynamic GAT (must-run)
+3. **E3** — Graph + speaker context (must-run)
+4. **E4** — Heterogeneous graph (must-run)
 
 ### Remaining Core-35 Pipeline
-- Week 8: D5, D8
-- Weeks 9–10: E1, E2, E3, E4 (graph-based)
-- Weeks 11–12: B2–B6, B8, F2
+- D2 (optional, Week 8)
+- Weeks 9-10: E1, E2, E3, E4
+- Weeks 11-12: B2-B6, B8, F2
 - Week 13: F3, F5, closure
 
 ## 11) Completion Definition

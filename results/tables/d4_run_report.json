@@ -1,0 +1,58 @@
+{
+  "experiment": "D4",
+  "title": "Convolution-free Transformer + MLSM (HuBERT-large PCA-32)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "d_model": 128,
+  "nhead": 8,
+  "num_layers": 4,
+  "ffn_dim": 256,
+  "n_params": 564997,
+  "loss": "MultiLabelSoftMarginLoss",
+  "architecture": "conv-free Transformer",
+  "epochs": 30,
+  "best_epoch": 20,
+  "batch_size": 256,
+  "lr": 0.0003,
+  "threshold": 0.5,
+  "macro_f1": 0.2719243117012195,
+  "micro_f1": 0.29802676343842144,
+  "macro_precision": 0.528244116103877,
+  "macro_recall": 0.2119035043105239,
+  "macro_auprc": 0.4331130905404209,
+  "per_class": {
+    "Block": {
+      "f1": 0.4403478260869565,
+      "precision": 0.5754545454545454,
+      "recall": 0.35661971830985917,
+      "auprc": 0.5500111859523513
+    },
+    "Prolongation": {
+      "f1": 0.0815450643776824,
+      "precision": 0.6551724137931034,
+      "recall": 0.043478260869565216,
+      "auprc": 0.40436868990600694
+    },
+    "SoundRep": {
+      "f1": 0.4027690371302706,
+      "precision": 0.4726735598227474,
+      "recall": 0.3508771929824561,
+      "auprc": 0.4280253116461795
+    },
+    "WordRep": {
+      "f1": 0.27162629757785467,
+      "precision": 0.3747016706443914,
+      "recall": 0.2130257801899593,
+      "auprc": 0.3230379114475793
+    },
+    "Interjection": {
+      "f1": 0.16333333333333333,
+      "precision": 0.5632183908045977,
+      "recall": 0.09551656920077972,
+      "auprc": 0.4601223537499877
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D4\\d4_best.pt"
+}

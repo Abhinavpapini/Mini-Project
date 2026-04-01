@@ -1,0 +1,66 @@
+{
+  "experiment": "D5",
+  "title": "Multi-task CNN: detection + type classification (HuBERT+MFCC)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "mfcc_dim": 21,
+  "fused_dim": 53,
+  "n_params": 190854,
+  "lambda_detect": 1.0,
+  "lambda_type": 1.0,
+  "n_samples": 20906,
+  "n_stutter": 16816,
+  "n_fluent": 4090,
+  "epochs": 30,
+  "best_epoch": 19,
+  "loss_detect": "BCEWithLogitsLoss",
+  "loss_type": "MultiLabelSoftMarginLoss",
+  "head1_detection": {
+    "detect_f1": 0.5282284231018819,
+    "detect_precision": 0.9698173153296267,
+    "detect_recall": 0.3629607609988109,
+    "detect_auroc": 0.8113990650320232
+  },
+  "head2_type": {
+    "macro_f1": 0.48939422702526275,
+    "micro_f1": 0.520881177171047,
+    "macro_precision": 0.5657569297543741,
+    "macro_recall": 0.45453545585330807,
+    "macro_auprc": 0.5404721940466561,
+    "per_class": {
+      "Block": {
+        "f1": 0.5774016923842707,
+        "precision": 0.5180884323358642,
+        "recall": 0.6520517144463182,
+        "auprc": 0.5501905157773722
+      },
+      "Prolongation": {
+        "f1": 0.4397854705021941,
+        "precision": 0.6069986541049798,
+        "recall": 0.34480122324159024,
+        "auprc": 0.5466052712794945
+      },
+      "SoundRep": {
+        "f1": 0.45752508361204014,
+        "precision": 0.5498392282958199,
+        "recall": 0.3917525773195876,
+        "auprc": 0.51014456141361
+      },
+      "WordRep": {
+        "f1": 0.3926056338028169,
+        "precision": 0.5822454308093995,
+        "recall": 0.2961487383798141,
+        "auprc": 0.4675085386545393
+      },
+      "Interjection": {
+        "f1": 0.5796532548249919,
+        "precision": 0.5716129032258065,
+        "recall": 0.5879230258792303,
+        "auprc": 0.6279120831082652
+      }
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D5\\d5_best.pt"
+}

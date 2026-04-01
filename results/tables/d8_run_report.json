@@ -1,0 +1,54 @@
+{
+  "experiment": "D8",
+  "title": "Prototypical Network (HuBERT-large PCA-32, 5-way K-shot)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "emb_dim": 128,
+  "n_way": 5,
+  "k_shot": 8,
+  "q_queries": 16,
+  "episodes": 2000,
+  "n_params": 174208,
+  "best_episode_acc": 0.315625,
+  "threshold": 0.5,
+  "macro_f1": 0.514168052191649,
+  "micro_f1": 0.5226881862680248,
+  "macro_precision": 0.4397459795475491,
+  "macro_recall": 0.6381873101824909,
+  "macro_auprc": 0.4946919814684271,
+  "per_class": {
+    "Block": {
+      "f1": 0.5428649685017803,
+      "precision": 0.5282515991471215,
+      "recall": 0.5583098591549296,
+      "auprc": 0.5525882178093005
+    },
+    "Prolongation": {
+      "f1": 0.5156686317095873,
+      "precision": 0.43462343096234307,
+      "recall": 0.6338672768878718,
+      "auprc": 0.4782222298519692
+    },
+    "SoundRep": {
+      "f1": 0.49937785151389463,
+      "precision": 0.4016010673782522,
+      "recall": 0.6600877192982456,
+      "auprc": 0.48581389978142797
+    },
+    "WordRep": {
+      "f1": 0.4240588489831242,
+      "precision": 0.3113087674714104,
+      "recall": 0.6648575305291723,
+      "auprc": 0.4106524217839129
+    },
+    "Interjection": {
+      "f1": 0.588869960249858,
+      "precision": 0.5229450327786183,
+      "recall": 0.6738141650422352,
+      "auprc": 0.5461831381155249
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D8\\d8_best.pt"
+}

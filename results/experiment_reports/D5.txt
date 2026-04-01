@@ -1,0 +1,183 @@
+D5 EXPERIMENT REPORT
+====================
+
+Experiment ID: D5
+Title: Multi-task CNN — stutter detection (Head 1) + type classification (Head 2)
+Status: DONE (full dataset, all 5 stutter types + detection)
+Run Ref: manual_d5_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS — TWO HEADS
+=====================================================================
+
+[HEAD 1: Stutter Detection (fluent vs stutter, binary BCE)]
+  Detect-F1   : 0.52823
+  Detect-Pre  : 0.96982   ← extremely high precision
+  Detect-Rec  : 0.36296   ← low recall at threshold=0.5
+  Detect-AUROC: 0.81140   ← good ranking quality (clinical screening use)
+  Best epoch  : 19 / 30
+
+[HEAD 2: Stutter Type Classification (5-class multi-label MLSM)]
+  Macro-F1    : 0.48939
+  Micro-F1    : 0.52088
+  Macro-Pre   : 0.56576
+  Macro-Rec   : 0.45454
+  Macro-AUPRC : 0.54047
+
+  Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5774 | 0.5181    | 0.6521 | 0.5502
+  Prolongation  | 0.4398 | 0.6070    | 0.3448 | 0.5466
+  SoundRep      | 0.4575 | 0.5498    | 0.3918 | 0.5101
+  WordRep       | 0.3926 | 0.5823    | 0.2962 | 0.4675
+  Interjection  | 0.5797 | 0.5716    | 0.5879 | 0.6279
+
+=====================================================================
+D5 vs ALL MULTI-LABEL EXPERIMENTS (Type Head, same features)
+=====================================================================
+
+Metric       | F1 (CNN) | D1 (Conf4) | D5 (Multi-task) |
+-------------|----------|------------|-----------------|
+Macro-F1     | 0.5497   | 0.5477     | 0.4894 ❌       |
+Micro-F1     | 0.5583   | 0.5660     | 0.5209          |
+Macro-Pre    | 0.4577   | 0.5737     | 0.5658          |
+Macro-Recall | 0.7262   | 0.5260     | 0.4545          |
+Macro-AUPRC  | 0.5812   | 0.6016     | 0.5405          |
+Features     | HuBERT+MFCC | HuBERT only | HuBERT+MFCC |
+Loss (type)  | Focal    | MLSM       | MLSM            |
+Task         | single   | single     | multi-task      |
+
+D5 type head Macro-F1 = 0.489 — below F1 (0.550) and D1 (0.548).
+Multi-task learning HURT type classification vs single-task baselines.
+
+HOWEVER — D5 uniquely provides detection capability (AUROC=0.811).
+No other experiment produces detection scores. This is a unique output.
+
+=====================================================================
+MODEL CONFIGURATION
+=====================================================================
+
+Feature input:
+  - HuBERT-large layer 21 (1024-dim → PCA-32, 58.3% explained variance)
+  - MFCC-21 (first 21 cols from 78-dim stats cache, standardised)
+  - Fused dim: 53 (same as F1 / F4)
+
+Architecture: D5 Multi-task CNN
+  Shared backbone (CNN-1D):
+    Conv1d(1→64, k=7) + BN + GELU
+    Conv1d(64→128, k=5) + BN + GELU
+    Conv1d(128→256, k=3) + BN + GELU → AdaptiveAvgPool(1)
+    Flatten → Dropout(0.2) → Linear(256→128) → GELU   [shared repr]
+  Head 1 (detect): Dropout → Linear(128→64) → GELU → Linear(64→1)
+  Head 2 (type)  : Dropout → Linear(128→64) → GELU → Linear(64→5)
+  Total params: 190,854
+
+Loss:
+  L_detect : BCEWithLogitsLoss (pos_weight=16816/4090≈4.11 — upweight stutter)
+  L_type   : MultiLabelSoftMarginLoss (stutter samples only, fluent masked out)
+  L_total  : 1.0 × L_detect + 1.0 × L_type
+  Threshold: 0.5
+
+Sampler: WeightedRandomSampler by fluent/stutter ratio (oversample fluent)
+
+Training: AdamW (lr=3e-4, wd=1e-4), CosineAnnealingLR, 30 epochs, batch=256
+
+Training data split:
+  16816 stutter clips — both heads learn from these
+  4090 fluent clips  — only detection head learns (type loss masked)
+
+=====================================================================
+TRAINING DYNAMICS
+=====================================================================
+
+Epochs 1-8: Detection head collapses (det_f1≈0) — all predictions negative.
+  Detection pos_weight=4.11 is insufficient to overcome early class imbalance.
+  Type head also low (macro_f1=0.11-0.22) due to gradient interference.
+
+Epochs 9-19: Both heads improve together. Val_loss drops from 1.25 → 0.92.
+  Detection F1 slowly rises: 0.24 @ ep9 → 0.53 @ ep19 (best epoch).
+  Type macro_f1 climbs to 0.489 @ ep19.
+
+Epochs 20-30: Plateau/fluctuations without further gain.
+  This suggests epoch 19 is the sweet spot for the combined loss.
+
+Key observation: Detection head learns MUCH slower than a standalone binary
+classifier would, because the shared backbone is being pulled toward type
+classification objectives simultaneously (gradient conflict).
+
+=====================================================================
+KEY INTERPRETATIONS
+=====================================================================
+
+1. MULTI-TASK LEARNING HURTS TYPE CLASSIFICATION (-0.06 vs F1):
+   Sharing encoder parameters between detection and type head enforces a
+   compromise representation. The detection task (simpler, binary) dominates
+   early training, slowing type head learning. F1's single-task CNN can
+   specialise the backbone entirely for type classification.
+
+2. DETECTION HEAD IS CLINICALLY VALUABLE (AUROC=0.811):
+   Despite low F1 at threshold=0.5, AUROC=0.811 shows the model orders
+   clips by stutter probability well. At lower threshold (e.g., 0.3), recall
+   would improve significantly — useful for clinical screening where false
+   negatives are more costly than false positives.
+
+3. DETECTION PRECISION=0.970 IS EXTRAORDINARY:
+   When D5 predicts a clip as stuttering at threshold=0.5, it is correct
+   97% of the time. This "high confidence positive" mode may be useful in
+   clinical annotation pipelines to pre-filter reliable stutter instances.
+
+4. DETECTION RECALL=0.363 IS THE WEAK POINT:
+   At 0.5 threshold, 63.7% of stutter clips are missed. This is the key
+   failure of D5's detection head — too conservative. Lowering threshold
+   or upweighting L_detect (e.g., λ_detect=2.0) could help.
+
+5. TYPE HEAD SHOWS GRADIENT INTERFERENCE CLEARLY:
+   Block and Interjection (most represented classes) achieve F1=0.577/0.580,
+   but WordRep and Prolongation (rare, need focused learning) suffer most
+   (0.393/0.440). In single-task F1, these were 0.415/0.583. Single-task
+   better at both.
+
+6. TASK WEIGHTING NOT OPTIMAL (λ=1.0 each):
+   With 16816 stutter and 4090 fluent, detection loss is naturally smaller
+   (easy majority-class samples). Type loss is larger. The equal λ may
+   under-weight detection. Try λ_detect=2.0 for better detection recall.
+
+=====================================================================
+CONCLUSION
+=====================================================================
+
+Multi-task D5 did NOT outperform single-task F1 on type classification
+(0.489 vs 0.550). The detection head provides unique value (AUROC=0.811)
+not available from any other experiment, but at the cost of type accuracy.
+
+Recommended use case for D5:
+  - Detection stage in a 2-stage pipeline: D5 detect → C5/F1 classify
+  - Clinical screening with high-precision stutter flagging (pre=0.97)
+  NOT recommended as the primary type classifier (use F1 or D1 instead).
+
+=====================================================================
+OUTPUT ARTIFACTS
+=====================================================================
+
+results/tables/d5_run_report.json      — full config + both head metrics
+results/tables/d5_perclass_results.csv — type head per-class F1/P/R/AUPRC
+results/tables/d5_train_history.csv    — 30 epochs both heads (detect+type)
+results/figures/d5_train_curves.png    — 3-panel: task losses, det F1, type F1
+results/figures/d5_perclass_f1.png    — type head per-class F1 bar chart
+artifacts/checkpoints/D5/d5_best.pt   — best checkpoint (epoch 19)
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+✅ GO — D5 complete and documented.
+   Type Macro-F1=0.489 (below F1 baseline of 0.550).
+   Detection AUROC=0.811 — unique value, not replicated by any other exp.
+   D5 is retained as detection pipeline component, NOT promoted as type classifier.
+
+Running total: 20/35 core experiments done.
+
+Next: D2 (optional — BiLSTM + AttnPool interpretable attention)
+      Then: E1, E2, E3, E4 (graph-based temporal models, Week 9-10)

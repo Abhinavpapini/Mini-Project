@@ -1,0 +1,59 @@
+{
+  "experiment": "E2",
+  "title": "2-layer GAT on k-NN speech graph (HuBERT-large PCA-64)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 64,
+  "k_nn": 10,
+  "gat_hidden_per_head": 64,
+  "gat_heads": 4,
+  "gat_out": 32,
+  "n_params": 53221,
+  "n_nodes": 20906,
+  "loss": "MultiLabelSoftMarginLoss",
+  "setting": "transductive",
+  "epochs": 200,
+  "best_epoch": 180,
+  "lr": 0.0005,
+  "weight_decay": 0.0005,
+  "threshold": 0.5,
+  "macro_f1": 0.5153388931489955,
+  "micro_f1": 0.5402771141901577,
+  "macro_precision": 0.6740006567493374,
+  "macro_recall": 0.42403602776832605,
+  "macro_auprc": 0.6184129714095428,
+  "per_class": {
+    "Block": {
+      "f1": 0.5643076923076923,
+      "precision": 0.6216949152542373,
+      "recall": 0.5166197183098592,
+      "auprc": 0.6507701600092171
+    },
+    "Prolongation": {
+      "f1": 0.5284629981024668,
+      "precision": 0.698870765370138,
+      "recall": 0.4248665141113654,
+      "auprc": 0.638239827006005
+    },
+    "SoundRep": {
+      "f1": 0.4643104643104643,
+      "precision": 0.6308851224105462,
+      "recall": 0.3673245614035088,
+      "auprc": 0.5674420916983649
+    },
+    "WordRep": {
+      "f1": 0.4015151515151515,
+      "precision": 0.664576802507837,
+      "recall": 0.2876526458616011,
+      "auprc": 0.5021967789497553
+    },
+    "Interjection": {
+      "f1": 0.6180981595092024,
+      "precision": 0.7539756782039289,
+      "recall": 0.5237166991552956,
+      "auprc": 0.7334159993843716
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\E2\\e2_best.pt"
+}

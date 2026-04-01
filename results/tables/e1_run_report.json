@@ -1,0 +1,58 @@
+{
+  "experiment": "E1",
+  "title": "2-layer GCN on k-NN speech graph (HuBERT-large PCA-32)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_pca_dim": 32,
+  "k_nn": 10,
+  "gcn_hidden": 64,
+  "gcn_out": 32,
+  "n_params": 6757,
+  "n_nodes": 20906,
+  "loss": "MultiLabelSoftMarginLoss",
+  "setting": "transductive",
+  "epochs": 200,
+  "best_epoch": 200,
+  "lr": 0.001,
+  "weight_decay": 0.0005,
+  "threshold": 0.5,
+  "macro_f1": 0.46762541513109834,
+  "micro_f1": 0.5051112447384245,
+  "macro_precision": 0.674571856674054,
+  "macro_recall": 0.3692083739869398,
+  "macro_auprc": 0.6022906216380703,
+  "per_class": {
+    "Block": {
+      "f1": 0.5399484536082474,
+      "precision": 0.6305492851768246,
+      "recall": 0.47211267605633805,
+      "auprc": 0.6276932326357523
+    },
+    "Prolongation": {
+      "f1": 0.47371107708014293,
+      "precision": 0.7160493827160493,
+      "recall": 0.35392829900839057,
+      "auprc": 0.6408597304535617
+    },
+    "SoundRep": {
+      "f1": 0.4363103953147877,
+      "precision": 0.6563876651982379,
+      "recall": 0.3267543859649123,
+      "auprc": 0.5560284197351344
+    },
+    "WordRep": {
+      "f1": 0.28361344537815125,
+      "precision": 0.627906976744186,
+      "recall": 0.18317503392130258,
+      "auprc": 0.463938082414742
+    },
+    "Interjection": {
+      "f1": 0.6045437042741625,
+      "precision": 0.7419659735349716,
+      "recall": 0.5100714749837557,
+      "auprc": 0.7229336429511615
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\E1\\e1_best.pt"
+}
