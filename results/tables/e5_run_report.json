@@ -1,0 +1,56 @@
+{
+  "experiment": "E5",
+  "title": "Graph-Transformer: batch k-NN + adjacency-biased attention (HuBERT+Whisper)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "whisper_alias": "whisper-large",
+  "whisper_layer": 28,
+  "d_model": 256,
+  "n_heads": 8,
+  "n_gt_layers": 2,
+  "knn_k": 8,
+  "adj_bias_init": 1.0,
+  "n_params": 2398229,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 40,
+  "best_epoch": 3,
+  "macro_f1": 0.6527759643615559,
+  "micro_f1": 0.6508341845420497,
+  "macro_precision": 0.6968844185178592,
+  "macro_recall": 0.6169523510620912,
+  "macro_auprc": 0.7353523681596799,
+  "per_class": {
+    "Block": {
+      "f1": 0.5977837675950883,
+      "precision": 0.6381074168797954,
+      "recall": 0.5622535211267605,
+      "auprc": 0.6791818907910109
+    },
+    "Prolongation": {
+      "f1": 0.5788113695090439,
+      "precision": 0.6646884272997032,
+      "recall": 0.5125858123569794,
+      "auprc": 0.6695064649233528
+    },
+    "SoundRep": {
+      "f1": 0.6270912034538586,
+      "precision": 0.6174282678002125,
+      "recall": 0.6370614035087719,
+      "auprc": 0.6897331483427012
+    },
+    "WordRep": {
+      "f1": 0.6912378303198887,
+      "precision": 0.7089871611982882,
+      "recall": 0.6743554952510177,
+      "auprc": 0.7621707220120955
+    },
+    "Interjection": {
+      "f1": 0.7689556509298998,
+      "precision": 0.8552108194112967,
+      "recall": 0.6985055230669266,
+      "auprc": 0.8761696147292387
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\E5\\e5_best.pt"
+}

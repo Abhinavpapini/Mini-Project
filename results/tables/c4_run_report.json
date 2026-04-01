@@ -1,0 +1,55 @@
+{
+  "experiment": "C4",
+  "title": "Cross-Attention SSL Fusion: HuBERT-large \u00d7 Whisper-large",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "hubert_dim": 1024,
+  "whisper_alias": "whisper-large",
+  "whisper_layer": 28,
+  "whisper_dim": 1280,
+  "d_model": 256,
+  "n_heads": 8,
+  "n_params": 1282053,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 40,
+  "best_epoch": 3,
+  "macro_f1": 0.6587350975664592,
+  "micro_f1": 0.659049597507141,
+  "macro_precision": 0.7189739840690883,
+  "macro_recall": 0.6086531827339132,
+  "macro_auprc": 0.7458860772972956,
+  "per_class": {
+    "Block": {
+      "f1": 0.6023072252580449,
+      "precision": 0.6530612244897959,
+      "recall": 0.5588732394366197,
+      "auprc": 0.6796160264222327
+    },
+    "Prolongation": {
+      "f1": 0.5887372013651877,
+      "precision": 0.6679574056147144,
+      "recall": 0.5263157894736842,
+      "auprc": 0.6941788472819055
+    },
+    "SoundRep": {
+      "f1": 0.6209824135839903,
+      "precision": 0.694708276797829,
+      "recall": 0.5614035087719298,
+      "auprc": 0.7031611742319235
+    },
+    "WordRep": {
+      "f1": 0.6948555320648344,
+      "precision": 0.7228739002932552,
+      "recall": 0.6689280868385346,
+      "auprc": 0.7683629178300594
+    },
+    "Interjection": {
+      "f1": 0.7867931155602389,
+      "precision": 0.8562691131498471,
+      "recall": 0.7277452891487979,
+      "auprc": 0.8841114207203576
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\C4\\c4_best.pt"
+}

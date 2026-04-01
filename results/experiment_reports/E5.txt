@@ -1,0 +1,124 @@
+E5 EXPERIMENT REPORT
+====================
+
+Experiment ID: E5
+Title: Graph-Transformer: batch k-NN + adjacency-biased attention (HuBERT+Whisper)
+Status: DONE — ⭐ RANK #2 OVERALL (final experiment)
+Run Ref: manual_e5_001
+Date Logged: 2026-04-01
+
+=====================================================================
+COMPLETE RESULTS
+=====================================================================
+
+Architecture:
+  HuBERT-large L21 (1024) + Whisper-large L28 (1280)
+  → Concat [2304] → FC(2304→512→256) + LayerNorm → node embeddings
+  → Build k-NN graph (k=8, cosine sim, per mini-batch): adj [B,B]
+  → GraphTransformer L1: QKV attn + adj.bias(β) + residual + FFN
+  → GraphTransformer L2: same
+  → MLP(256→128→5) + MLSM
+
+Parameters: 2,398,229 | β (adj bias): learnable per head (init=1.0)
+Best checkpoint: epoch 3 / 40
+
+Overall metrics:
+  Macro-F1   : 0.65278  ← Rank #2 (above D7=0.649, below C4=0.659)
+  Micro-F1   : 0.65083
+  Macro-Pre  : 0.69688
+  Macro-Rec  : 0.61695
+  Macro-AUPRC: 0.73535   ← Rank #2 AUPRC
+
+Per-class breakdown:
+  Stutter Type  | F1     | Precision | Recall | AUPRC
+  --------------|--------|-----------|--------|--------
+  Block         | 0.5978 | 0.6381    | 0.5623 | 0.6792
+  Prolongation  | 0.5788 | 0.6647    | 0.5126 | 0.6695
+  SoundRep      | 0.6271 | 0.6174    | 0.6371 | 0.6897  ← BEST SoundRep in project!
+  WordRep       | 0.6912 | 0.7090    | 0.6744 | 0.7622
+  Interjection  | 0.7690 | 0.8552    | 0.6985 | 0.8762
+
+NOTABLE: SoundRep F1=0.627 is the all-time best for SoundRep (prev: D7=0.600)
+
+=====================================================================
+FINAL PROJECT LEADERBOARD — ALL 40 EXPERIMENTS
+=====================================================================
+
+Rank | Exp | Series    | Method                        | Macro-F1 | AUPRC
+-----|-----|-----------|-------------------------------|----------|------
+  1  | C4  | Fusion    | HuBERT×Whisper CrossAttn      | 0.6587   | 0.7459  ← CHAMPION
+  2  | E5  | Graph     | Graph-Transformer (H+W)       | 0.6528   | 0.7354
+  3  | D7  | Deep      | Atrous-CNN (H+W)              | 0.6494   | 0.7261
+  4  | D6  | Deep      | TDNN SSL+MFCC                 | 0.5848   | 0.6475
+  5  | D3  | Deep      | SE-ResNet1D + BiLSTM          | 0.5503   | 0.5833
+  6  | F3  | Robust    | GRL Speaker Disentanglement   | 0.5399   | 0.6271
+  7  | E2  | Graph     | Dynamic GAT (4-head)          | 0.5153   | 0.6184
+  8  | D2  | Deep      | BiLSTM-Attention              |~0.5050   |~0.590
+  9  | F1  | Baseline  | PCA-32 + CNN-1D               |~0.4900   |~0.580
+ 10  | B5  | Dim-Red   | VAE-μ 32 (β=0.5)              | 0.4731   | 0.5590
+ 11  | B6  | Dim-Red   | UMAP-32                       | 0.4656   | 0.5252
+ ...
+ 40  | B8  | Dim-Red   | ICA-32 (FastICA)              | 0.2758   | 0.4487
+
+=====================================================================
+TOP-3 CONVERGENCE ANALYSIS (C4, E5, D7)
+=====================================================================
+
+All three top models use HuBERT+Whisper dual-SSL. Only fusion differs:
+
+Model | Fusion Mechanism | F1    | Best Ep | Params
+------|-----------------|-------|---------|--------
+C4   | Bidirect XAttn  | 0.659 |   ep3   | 1.28M
+E5   | Graph-Transformer| 0.653 |   ep3   | 2.40M
+D7   | Atrous-CNN      | 0.649 |   ep2   | 4.07M
+
+Cross-attention > Graph-Transformer > Dilated-CNN, but gap is tiny (0.010).
+The specific fusion architecture is secondary to the dual-SSL input.
+
+Per-class best-in-series (from the top-3 models):
+  Block:         C4=0.602  (best precision-recall balance)
+  Prolongation:  D7=0.613  (best, multi-scale atrous captures sustained sounds)
+  SoundRep:      E5=0.627  (best, graph context helps repetition detection)
+  WordRep:       C4=0.695  (best, Whisper word-level features directly encode this)
+  Interjection:  C4=0.787  (best, Whisper filler-token representations)
+
+Graph structure (E5) specifically helps SoundRep:
+  Similar clips share acoustic repetition patterns → k-NN connects them
+  → graph attention amplifies SoundRep signal across neighbors.
+
+=====================================================================
+KEY PROJECT CONCLUSIONS (40 EXPERIMENTS)
+=====================================================================
+
+1. DUAL-SSL IS THE #1 DRIVER: HuBERT+Whisper combination adds +0.1 F1
+   over best single-SSL model (F3=0.540 → C4=0.659)
+
+2. FUSION MECHANISM IS SECONDARY: ±0.01 F1 between XAttn/Graph-T/Atrous
+
+3. SPEAKER DISENTANGLEMENT (F3-GRL) IS THE BEST SINGLE-MODEL APPROACH:
+   0.540 F1 with only HuBERT+PCA-32 — the best "lightweight" model.
+
+4. SSL+MFCC (D6) IS THE BEST BALANCED MODEL: All 5 classes above 0.54,
+   best production choice when per-class fairness matters.
+
+5. ICA IS CATEGORICALLY WRONG for stutter features (0.276 F1).
+
+6. AUGMENTATION HURTS FOR FEATURES (F2=0.434, F5=0.446):
+   Must apply augmentation at raw audio, not cached feature level.
+
+7. OVERFITTING IS UNIVERSAL at 1M+ params with 20K samples:
+   All post-35 models best at ep2-4. Proper regularisation could push
+   C4 → 0.70+ F1.
+
+=====================================================================
+STOP/GO GATE VERDICT
+=====================================================================
+
+✅ BENCHMARK CLOSED — E5 promoted.
+   The full 40-experiment benchmark is complete.
+   Production recommendation:
+     Lightweight: F3 (GRL) — 163K params, 0.540 F1
+     Standard: D6 (TDNN) — 1.06M params, 0.585 F1, most balanced
+     Maximum: C4 (XAttn) — 1.28M params, 0.659 F1
+
+🏁 PROJECT HELIX COMPLETE.

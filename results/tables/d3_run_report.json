@@ -1,0 +1,60 @@
+{
+  "experiment": "D3",
+  "title": "SE-ResNet1D + BiLSTM + Attn-Pool (HuBERT-large pseudo-sequence)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "in_dim": 1024,
+  "seq_len": 32,
+  "feat_size": 32,
+  "se_channels": [
+    64,
+    128,
+    256
+  ],
+  "se_ratio": 4,
+  "lstm_hidden": 128,
+  "lstm_layers": 2,
+  "n_params": 1279590,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 50,
+  "best_epoch": 10,
+  "macro_f1": 0.550339365844723,
+  "micro_f1": 0.5679714264888112,
+  "macro_precision": 0.5169384323516008,
+  "macro_recall": 0.6001958467157222,
+  "macro_auprc": 0.5832995443257402,
+  "per_class": {
+    "Block": {
+      "f1": 0.572976054732041,
+      "precision": 0.5799192152336988,
+      "recall": 0.5661971830985916,
+      "auprc": 0.6162847037267951
+    },
+    "Prolongation": {
+      "f1": 0.5753158406219631,
+      "precision": 0.5,
+      "recall": 0.6773455377574371,
+      "auprc": 0.5841352245393396
+    },
+    "SoundRep": {
+      "f1": 0.4997128087306146,
+      "precision": 0.5247285886610374,
+      "recall": 0.4769736842105263,
+      "auprc": 0.5245449127000126
+    },
+    "WordRep": {
+      "f1": 0.4798962386511025,
+      "precision": 0.45962732919254656,
+      "recall": 0.5020352781546812,
+      "auprc": 0.49805236039270445
+    },
+    "Interjection": {
+      "f1": 0.6237958864878937,
+      "precision": 0.5204170286707211,
+      "recall": 0.7784275503573749,
+      "auprc": 0.693480520269849
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D3\\d3_best.pt"
+}

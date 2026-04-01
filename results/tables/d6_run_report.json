@@ -1,0 +1,60 @@
+{
+  "experiment": "D6",
+  "title": "TDNN SSL+MFCC Fusion (HuBERT-large + MFCC-78, dilated temporal)",
+  "device": "cuda",
+  "hubert_alias": "hubert-large",
+  "hubert_layer": 21,
+  "ssl_dim": 1024,
+  "mfcc_dim": 78,
+  "fused_dim": 320,
+  "tdnn_channels": [
+    256,
+    256,
+    256,
+    256,
+    256
+  ],
+  "seq_len": 32,
+  "n_params": 1061189,
+  "loss": "MultiLabelSoftMarginLoss",
+  "epochs": 50,
+  "best_epoch": 4,
+  "macro_f1": 0.5848420876451705,
+  "micro_f1": 0.595352767215885,
+  "macro_precision": 0.6264359603735266,
+  "macro_recall": 0.5510266312451823,
+  "macro_auprc": 0.6475314027289429,
+  "per_class": {
+    "Block": {
+      "f1": 0.6017352364959417,
+      "precision": 0.5978865406006674,
+      "recall": 0.6056338028169014,
+      "auprc": 0.6378831861808523
+    },
+    "Prolongation": {
+      "f1": 0.547486033519553,
+      "precision": 0.6269685039370079,
+      "recall": 0.4858886346300534,
+      "auprc": 0.6270412707523003
+    },
+    "SoundRep": {
+      "f1": 0.5448235974551764,
+      "precision": 0.576499388004896,
+      "recall": 0.5164473684210527,
+      "auprc": 0.5861961179360354
+    },
+    "WordRep": {
+      "f1": 0.5457083042568039,
+      "precision": 0.5617816091954023,
+      "recall": 0.5305291723202171,
+      "auprc": 0.5801782423237022
+    },
+    "Interjection": {
+      "f1": 0.6844572664983772,
+      "precision": 0.7690437601296597,
+      "recall": 0.6166341780376868,
+      "auprc": 0.8063581964518246
+    }
+  },
+  "best_checkpoint": "artifacts\\checkpoints\\D6\\d6_best.pt"
+}
