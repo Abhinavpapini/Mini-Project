@@ -1,12 +1,12 @@
 """E4: Spatial-Temporal GCN (ST-GCN) for multi-label stutter classification.
 
-Extends E1/E2 by combining TWO types of graph edges:
-  1. SPATIAL edges  — k-NN cosine similarity (same as E1, captures acoustic similarity)
-  2. TEMPORAL edges — sequential clip ordering WITHIN same show+episode
-                      (captures conversational context: neighbouring clips influence each other)
+Combines TWO types of graph edges:
+    1. SPATIAL edges  — k-NN cosine similarity (captures acoustic similarity)
+    2. TEMPORAL edges — sequential clip ordering WITHIN same show+episode
+                                            (captures conversational context: neighbouring clips influence each other)
 
 Combined adjacency: A = A_spatial + lambda * A_temporal
-Then apply 2-layer GCN (same as E1) on the combined graph.
+Then apply a 2-layer GCN on the combined graph.
 
 Rationale for temporal edges:
   - Stuttering events are contextual: a speaker block often follows or precedes other events
@@ -78,7 +78,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--k-nn",            type=int,  default=10,
                    help="Spatial k-NN edges")
     p.add_argument("--temporal-lambda", type=float,default=0.5,
-                   help="Weight scaling for temporal edges vs spatial edges")
+                   help="Weight scaling for temporal edges relative to spatial edges")
     # GCN params
     p.add_argument("--gcn-hidden",      type=int,  default=64)
     p.add_argument("--gcn-out",         type=int,  default=32)
@@ -138,7 +138,7 @@ def load_ssl_cache(features_root: Path, alias: str, fold: str, layer: int) -> np
 
 
 # ---------------------------------------------------------------------------
-# Spatial graph: k-NN cosine (same as E1)
+# Spatial graph: k-NN cosine
 # ---------------------------------------------------------------------------
 
 def build_spatial_edges(x: np.ndarray, k: int) -> Tuple[List[int], List[int]]:
@@ -248,7 +248,7 @@ def build_stgcn_adjacency(
 
 
 # ---------------------------------------------------------------------------
-# GCN model (same as E1 — reused on combined ST adjacency)
+# GCN model (2-layer) on combined ST adjacency
 # ---------------------------------------------------------------------------
 
 class GCNLayer(nn.Module):
@@ -262,8 +262,8 @@ class GCNLayer(nn.Module):
 
 class STGCN(nn.Module):
     """
-    Spatial-Temporal GCN: same 2-layer GCN as E1, but on combined
-    spatial (k-NN) + temporal (episode-sequential) adjacency.
+    Spatial-Temporal GCN: 2-layer GCN on combined spatial (k-NN)
+    + temporal (episode-sequential) adjacency.
 
     The combined adjacency encodes BOTH acoustic similarity AND
     conversational temporal context in one propagation kernel.
@@ -434,7 +434,7 @@ def main() -> None:
                 torch.save(model.state_dict(), best_ckpt)
 
     # ------------------------------------------------------------------
-    # 6. Final evaluation + ablation
+    # 6. Final evaluation
     # ------------------------------------------------------------------
     model.load_state_dict(torch.load(best_ckpt, map_location=device))
     model.eval()
@@ -454,9 +454,7 @@ def main() -> None:
         print(f"    {t:15s}: F1={test_m[f'f1_{t}']:.5f}  "
               f"P={test_m[f'pre_{t}']:.5f}  R={test_m[f'rec_{t}']:.5f}  "
               f"AUPRC={test_m[f'auprc_{t}']:.5f}")
-    print(f"\n  [E4 vs E1 ablation: same GCN + temporal edges]")
-    print(f"    E1 (spatial only, k=10): expected macro_f1≈0.468")
-    print(f"    E4 (spatial+temporal,  λ={args.temporal_lambda}): macro_f1={test_m['macro_f1']:.5f}")
+    print(f"\n  Temporal edge weight λ={args.temporal_lambda}")
 
     # ------------------------------------------------------------------
     # 7. Save outputs
@@ -491,7 +489,6 @@ def main() -> None:
                           "recall": test_m[f"rec_{t}"], "auprc": test_m[f"auprc_{t}"]}
                       for t in STUTTER_TYPES},
         "best_checkpoint": str(best_ckpt),
-        "e1_baseline_macro_f1": 0.4676,
     }
     (args.out_dir / "e4_run_report.json").write_text(json.dumps(run_report, indent=2))
 
@@ -509,10 +506,9 @@ def main() -> None:
         axes[0].legend(); axes[0].grid(alpha=0.3)
 
         axes[1].plot(ep_x, [r["macro_f1"] for r in history], color="darkorange", marker="o", ms=4)
-        axes[1].axhline(0.4676, ls="--", color="steelblue", alpha=0.6, label="E1 GCN baseline")
         axes[1].axvline(x=history[best_ep_idx]["epoch"], ls="--", color="red", alpha=0.6,
                         label=f"best={best_macro_f1:.4f}")
-        axes[1].set_title("E4 Validation Macro-F1 (vs E1)"); axes[1].set_xlabel("Epoch")
+        axes[1].set_title("E4 Validation Macro-F1"); axes[1].set_xlabel("Epoch")
         axes[1].set_ylabel("Macro-F1"); axes[1].legend(); axes[1].grid(alpha=0.3)
         fig.tight_layout()
         fig.savefig(args.fig_dir / "e4_train_curves.png", dpi=160); plt.close(fig)

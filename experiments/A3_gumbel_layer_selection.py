@@ -293,12 +293,7 @@ def main() -> None:
     except Exception:
         fig_path = None
 
-    print("A3 completed.")
-    print(f"Report: {report_json}")
-    print(f"Weights: {weights_csv}")
-    print(f"History: {history_csv}")
-    if fig_path:
-        print(f"Figure: {fig_path}")
+
 
 
 if __name__ == "__main__":

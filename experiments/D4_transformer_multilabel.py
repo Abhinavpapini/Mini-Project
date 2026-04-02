@@ -4,9 +4,8 @@ Architecture (TranStutter-style):
   HuBERT-large (layer 21, PCA-32) → [B, 32] → token embed [B, 32, d_model]
   → N× TransformerEncoderLayer (MHSA + FFN, NO conv) → AvgPool → Linear(2)
 
-Ablation vs D1:
-  D1 used 4-block Conformer (MHSA + DepthwiseConv + FFN)
-  D4 uses pure Transformer (MHSA + FFN only) — tests whether conv module helped
+Notes:
+    D4 uses a pure Transformer encoder (MHSA + FFN only).
 
 Run command:
     python experiments/D4_transformer_multilabel.py \
@@ -144,11 +143,7 @@ def compute_sample_weights(y: np.ndarray) -> np.ndarray:
 class D4TransformerMultiLabel(nn.Module):
     """
     Convolution-free Transformer encoder for multi-label stutter classification.
-    Each PCA component is treated as a token; MHSA + FFN only (no conv).
-
-    Ablation target vs D1:
-      D1 ConformerBlock = FF → MHSA → DepthwiseConv → FF
-      D4 TransformerBlock = MHSA → FFN  (standard pre-norm Transformer)
+    Each PCA component is treated as a token with self-attention and FFN blocks only.
     """
 
     def __init__(self, in_dim: int, d_model: int, nhead: int, num_layers: int,
@@ -293,7 +288,7 @@ def main() -> None:
     print(f"\nD4 model parameters: {n_params:,}")
     print(f"  d_model={args.d_model} | nhead={args.nhead} | "
           f"layers={args.num_layers} | ffn_dim={args.ffn_dim}")
-    print(f"  Architecture: MHSA + FFN only (NO depthwise conv — ablation vs D1)")
+    print("  Architecture: MHSA + FFN only")
 
     criterion = nn.MultiLabelSoftMarginLoss()
     opt       = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)

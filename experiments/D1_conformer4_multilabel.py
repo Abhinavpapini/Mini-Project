@@ -4,11 +4,11 @@ Architecture:
   HuBERT-large (layer 21, PCA-32) → [B, 32] → token embed [B, 32, d_model]
   → 4× ConformerBlock (MHSA + DepthwiseConv + FFN) → AvgPool → Linear(5) → sigmoid
 
-Key differences from F4 (2-block Conformer + BCE):
-  - Depth: 4 Conformer blocks (vs 2 in F4)
-  - Input: HuBERT-large PCA-32 only (no MFCC — 32 dims vs 53)
-  - Loss: MultiLabelSoftMarginLoss (vs BCEWithLogitsLoss in F4)
-  - Larger d_model=128 with nhead=8 for richer attention
+Model details:
+    - Depth: 4 Conformer blocks
+    - Input: HuBERT-large PCA-32 only (no MFCC)
+    - Loss: MultiLabelSoftMarginLoss
+    - d_model=128 with nhead=8
 
 Run command:
     python experiments/D1_conformer4_multilabel.py \

@@ -19,7 +19,7 @@ Design choices:
   - 5-way (one class per stutter type) K=8 shot episodes
   - Shared CNN embedding network → 128-dim embedding space
   - Euclidean distance to prototypes → softmax → cross-entropy
-  - Evaluation: standard multi-label by running each class as 1-way vs rest
+    - Evaluation: standard multi-label by running each class as 1-way against the rest
 
 Run command:
     python experiments/D8_prototypical_net.py \
@@ -249,7 +249,7 @@ def evaluate_multilabel_from_embeddings(
 ) -> Dict[str, float]:
     """
     Use the trained embedding net + class prototypes from train set pooled mean.
-    For each stutter type, compute prototype of positive vs negative class,
+    For each stutter type, compute prototype of positive and negative class,
     then classify test samples by distance ratio → binary F1.
     """
     emb_net.eval()
@@ -278,7 +278,7 @@ def evaluate_multilabel_from_embeddings(
         proto_pos = tr_emb[pos_mask].mean(axis=0)   # [D]
         proto_neg = tr_emb[neg_mask].mean(axis=0)   # [D]
 
-        # Distance to pos vs neg prototype → score
+        # Distance to pos and neg prototypes → score
         d_pos = np.linalg.norm(te_emb - proto_pos, axis=1)
         d_neg = np.linalg.norm(te_emb - proto_neg, axis=1)
         # Score: higher = more likely positive (closer to pos prototype)

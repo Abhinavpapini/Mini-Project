@@ -5,8 +5,8 @@ unlike PCA which finds uncorrelated components (maximises variance).
 
 Pipeline:
   HuBERT(1024) → StandardScaler → PCA-128 (pre-reduce)
-  → FastICA-32 (n_components=32, algorithm=parallel)
-  → StandardScaler → CNN-1D (same as all B-series)
+    → FastICA-32 (n_components=32, algorithm=parallel)
+    → StandardScaler → CNN-1D classifier
 
 FastICA separates the mixed HuBERT features into maximally
 independent source signals using the FastICA algorithm (Hyvärinen 1999).

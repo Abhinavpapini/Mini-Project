@@ -127,11 +127,7 @@ def main() -> None:
     report_json = args.out_dir / "a8_run_report.json"
     report_json.write_text(json.dumps(run_report, indent=2), encoding="utf-8")
 
-    print("A8 completed.")
-    print(f"Summary: {summary_csv}")
-    print(f"Run report: {report_json}")
-    if fig_path:
-        print(f"Figure: {fig_path}")
+
 
 
 if __name__ == "__main__":

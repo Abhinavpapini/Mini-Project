@@ -71,4 +71,26 @@ Output artifacts
 Scope note
 ----------
 This completion reflects full-dataset run for wav2vec2-base fold0 with target
-set to Block. Next strict-order item is C3.
+set to Block.
+
+Key Hypotheses and Expected Outcomes
+------------------------------------
+- H1: Layer optimality is stutter-type dependent: Blocks (motor planning failure)
+    may be better captured in later layers encoding prosodic structure, while sound
+    repetitions (acoustic-phonetic events) may peak in mid-layers. Expected: per-type
+    optimal layers differ by 3 to 8 layers.
+- H2: Dimensionality reduction improves generalization: PCA to about 32 dimensions
+    from 1024 should improve macro-F1 on minority stutter types by removing noise
+    dimensions, similar to the 32-dim result in the dysarthria paper.
+- H3: Handcrafted stutter features provide complementary signal: Features like
+    jitter, pause ratio, and speaking rate should show low correlation with compact
+    SSL+MFCC fusion (similar to <0.1 mean correlation in the dysarthria paper),
+    indicating additive value.
+- H4: Graph-based models outperform CNN on temporal stutter patterns: Disfluencies
+    span multiple frames and involve non-local acoustic dependencies (for example,
+    coarticulation changes before a block). GCN/D-GAT are expected to capture these
+    better than frame-averaged CNN classifiers.
+- H5: Multi-label formulation improves co-occurrence handling: Converting to
+    multi-label binary classification should improve F1 on clips with two or more
+    simultaneous disfluency annotations, expected to be a significant portion of
+    SEP-28k.

@@ -87,7 +87,6 @@ def load_audio(path: Path, sample_rate: int) -> np.ndarray:
 
 def main() -> None:
     args = parse_args()
-
     if not args.clips_root.exists():
         raise FileNotFoundError(f"Clips root not found: {args.clips_root}")
 
@@ -140,12 +139,6 @@ def main() -> None:
         np.save(save_dir / f"layer_{layer}.npy", arr)
 
     print("A7 feature cache build completed.")
-    print(f"Model: {args.model_name}")
-    print(f"Alias: {args.model_alias}")
-    print(f"Fold: {args.fold}")
-    print(f"Saved to: {save_dir}")
-    print(f"Layers: {args.layers}")
-    print(f"Num files: {len(wav_files)}")
 
 
 if __name__ == "__main__":

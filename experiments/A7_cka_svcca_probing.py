@@ -59,7 +59,7 @@ def parse_args() -> argparse.Namespace:
         "--max-layer-gaps",
         type=int,
         default=999,
-        help="Intra-model comparison gap (default compares all discovered pairs).",
+        help="Intra-model layer-gap limit (default uses all discovered pairs).",
     )
     return parser.parse_args()
 
@@ -365,12 +365,7 @@ def main() -> None:
     report_path = args.out_dir / "a7_run_report.json"
     report_path.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
-    print("A7 completed.")
-    print(f"Summary: {summary_csv}")
-    print(f"Top pairs: {top_csv}")
-    print(f"Run report: {report_path}")
-    if heatmap_written == 0:
-        print("Heatmaps skipped (matplotlib unavailable or insufficient data).")
+
 
 
 if __name__ == "__main__":

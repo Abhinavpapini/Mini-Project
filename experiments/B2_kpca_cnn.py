@@ -1,13 +1,11 @@
 """B2: Kernel PCA (RBF) dimensionality reduction benchmark.
 
-Ablation over B1 (linear PCA): does non-linear feature projection help?
-
 Pipeline:
-  HuBERT-large layer 21 (1024-dim)
-  → StandardScaler
-  → KernelPCA(kernel='rbf', n_components=32)   ← non-linear projection
-  → CNN-1D multi-label classifier               ← same arch as F1/B1
-  → MultiLabelSoftMarginLoss
+    HuBERT-large layer 21 (1024-dim)
+    → StandardScaler
+    → KernelPCA(kernel='rbf', n_components=32)
+    → CNN-1D multi-label classifier
+    → MultiLabelSoftMarginLoss
 
 KernelPCA with RBF maps features to a high-dimensional Hilbert space,
 capturing non-linear structure that linear PCA cannot.
@@ -80,7 +78,7 @@ def parse_args() -> argparse.Namespace:
                    help="RBF gamma: float or 'auto' = 1/(n_features*X.var())")
     p.add_argument("--kpca-fit-samples", type=int,  default=5000,
                    help="Subsample of training data used to fit KPCA")
-    # CNN params (same as F1/B1 for fair ablation)
+    # CNN params
     p.add_argument("--cnn-channels",    type=str,  default="64,128,256")
     p.add_argument("--dropout",         type=float,default=0.3)
     # Training
@@ -149,14 +147,12 @@ def compute_sample_weights(y: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# CNN-1D classifier (same topology as F1 / B1 for fair ablation)
+# CNN-1D classifier
 # ---------------------------------------------------------------------------
 
 class CNN1DMultiLabel(nn.Module):
     """
     1D-CNN treating the KPCA-32 dims as a 1D sequence.
-    Identical architecture to the B1/F1 baseline — only the
-    input features differ (KPCA-32 vs linear PCA-32).
     """
 
     def __init__(self, in_dim: int, channels: List[int],
@@ -225,17 +221,14 @@ def main() -> None:
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
 
     # ------------------------------------------------------------------
     # 1. Features + labels
     # ------------------------------------------------------------------
-    print(f"\nLoading HuBERT-large layer {args.hubert_layer} cache ...")
     ssl_feats = load_ssl_cache(args.features_root, args.hubert_alias, args.fold, args.hubert_layer)
     if ssl_feats.ndim != 2:
         ssl_feats = ssl_feats.reshape(ssl_feats.shape[0], -1)
     n = ssl_feats.shape[0]
-    print(f"  SSL features: {ssl_feats.shape}")
 
     label_map: Dict[Tuple[str, str, str], np.ndarray] = {}
     label_map.update(load_multilabel_map(args.sep_labels))
@@ -245,10 +238,6 @@ def main() -> None:
         [label_map.get(k, np.zeros(len(STUTTER_TYPES), dtype=np.float32)) for k in clip_keys],
         dtype=np.float32,
     )
-    print(f"\nDataset: {n} samples | Label distribution:")
-    for i, t in enumerate(STUTTER_TYPES):
-        pos = int(y[:, i].sum())
-        print(f"  {t:15s}: {pos:5d} pos  ({pos/n:.2%})")
 
     # ------------------------------------------------------------------
     # 2. Train/test split
@@ -266,11 +255,9 @@ def main() -> None:
     x_te_sc = sc.transform(ssl_feats[test_idx])
 
     if args.pre_pca_dim and args.pre_pca_dim < ssl_feats.shape[1]:
-        print(f"  Pre-PCA: 1024 → {args.pre_pca_dim} (linear, before KPCA) ...")
         pre_pca = PCA(n_components=args.pre_pca_dim, random_state=args.seed)
         x_tr_sc = pre_pca.fit_transform(x_tr_sc)
         x_te_sc = pre_pca.transform(x_te_sc)
-        print(f"  Pre-PCA expl_var: {pre_pca.explained_variance_ratio_.sum():.3f}")
         n_kpca_features = args.pre_pca_dim
     else:
         n_kpca_features = ssl_feats.shape[1]
@@ -287,19 +274,15 @@ def main() -> None:
     if args.kpca_gamma == "auto":
         # gamma = 1 / (n_features * X.var())  — sklearn 'scale' heuristic
         gamma_val = 1.0 / (n_kpca_features * float(x_fit.var()))
-        print(f"  Auto-gamma: 1 / ({n_kpca_features} × {x_fit.var():.4f}) = {gamma_val:.6f}")
     else:
         gamma_val = float(args.kpca_gamma)
 
     # Sanity check: expected kernel value at mean pairwise distance
     mean_sq_dist = 2.0 * n_kpca_features * float(x_fit.var())
     expected_k   = np.exp(-gamma_val * mean_sq_dist)
-    print(f"  Expected K(x,y) at mean dist: exp(-{gamma_val:.6f}×{mean_sq_dist:.1f}) = {expected_k:.4f}")
+    # Warn if kernel values are likely near zero (gamma too large).
     if expected_k < 0.01:
         print(f"  [WARN] Kernel values near zero — gamma may be too large!")
-
-    print(f"\nKernel PCA (RBF, γ={gamma_val:.6f}, n_components={args.kpca_dim}) ...")
-    print(f"  Fitting on {fit_n} training samples ...")
     kpca = KernelPCA(
         n_components=args.kpca_dim,
         kernel="rbf",
@@ -309,7 +292,6 @@ def main() -> None:
         random_state=args.seed,
     )
     kpca.fit(x_fit)
-    print(f"  KPCA fit done. Transforming all splits ...")
     x_tr = kpca.transform(x_tr_sc).astype(np.float32)
     x_te = kpca.transform(x_te_sc).astype(np.float32)
 
@@ -318,17 +300,14 @@ def main() -> None:
     x_tr = kpca_sc.fit_transform(x_tr).astype(np.float32)
     x_te = kpca_sc.transform(x_te).astype(np.float32)
 
-    # Reference linear PCA for comparison
+    # Reference linear PCA
     pca_ref = PCA(n_components=args.kpca_dim, random_state=args.seed)
     pca_ref.fit(x_fit)
-    print(f"  Reference linear PCA-{args.kpca_dim} expl_var: {pca_ref.explained_variance_ratio_.sum():.3f}")
-    print(f"  KPCA-{args.kpca_dim} (RBF, γ={gamma_val:.6f}): non-linear — no expl_var metric")
-    print(f"  Input to CNN: [{args.kpca_dim}-dim non-linear embedding]")
 
     y_tr, y_te = y[train_idx], y[test_idx]
 
     # ------------------------------------------------------------------
-    # 5. DataLoaders (same weighted sampler as F1/B1)
+    # 5. DataLoaders
     # ------------------------------------------------------------------
     sw = compute_sample_weights(y_tr)
     sampler  = WeightedRandomSampler(torch.from_numpy(sw), len(sw), replacement=True)
@@ -340,15 +319,12 @@ def main() -> None:
                           num_workers=0, pin_memory=True)
 
     # ------------------------------------------------------------------
-    # 6. Model (identical to B1/F1)
+    # 6. Model
     # ------------------------------------------------------------------
     channels = [int(c) for c in args.cnn_channels.split(",")]
     model    = CNN1DMultiLabel(in_dim=args.kpca_dim, channels=channels,
                                num_classes=len(STUTTER_TYPES), dropout=args.dropout).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"\nB2 model parameters: {n_params:,}")
-    print(f"  CNN-1D: {args.kpca_dim}→{channels}→5 (same arch as F1/B1)")
-    print(f"  Reduction: pre-PCA({args.pre_pca_dim}) → KPCA-RBF(γ={gamma_val:.6f}) vs linear PCA (B1 baseline)")
 
     criterion = nn.MultiLabelSoftMarginLoss()
     opt       = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -358,7 +334,6 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 7. Training
     # ------------------------------------------------------------------
-    print(f"\nTraining for {args.epochs} epochs ...")
     history: List[Dict] = []
     best_macro_f1 = -1.0
     best_ckpt = args.ckpt_dir / "b2_best.pt"
@@ -419,9 +394,6 @@ def main() -> None:
         print(f"    {t:15s}: F1={test_m[f'f1_{t}']:.5f}  "
               f"P={test_m[f'pre_{t}']:.5f}  R={test_m[f'rec_{t}']:.5f}  "
               f"AUPRC={test_m[f'auprc_{t}']:.5f}")
-    print(f"\n  [B2 vs B1 ablation]")
-    print(f"    B1 linear PCA-32: expected macro_f1 ≈ 0.48-0.50 (from A-series)")
-    print(f"    B2 KPCA-RBF-32 : macro_f1 = {test_m['macro_f1']:.5f}")
 
     # ------------------------------------------------------------------
     # 9. Save
@@ -493,14 +465,8 @@ def main() -> None:
         ax2.set_xlabel("Stutter Type"); ax2.set_ylabel("F1"); ax2.legend()
         fig2.tight_layout()
         fig2.savefig(args.fig_dir / "b2_perclass_f1.png", dpi=160); plt.close(fig2)
-        print(f"  Saved: {args.fig_dir / 'b2_train_curves.png'}")
-        print(f"  Saved: {args.fig_dir / 'b2_perclass_f1.png'}")
     except Exception as exc:
         print(f"  [WARN] Figure generation failed: {exc}")
-
-    print("\n✅  B2 complete.")
-    print(f"   Report : {args.out_dir / 'b2_run_report.json'}")
-    print(f"   Ckpt   : {best_ckpt}")
 
 
 if __name__ == "__main__":

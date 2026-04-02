@@ -1,6 +1,6 @@
 """B5: VAE (Variational Autoencoder) latent space compression benchmark.
 
-Extends B4 (deterministic AE) with a probabilistic bottleneck:
+Probabilistic bottleneck details:
   - Encoder outputs μ and log-σ² (mean and log-variance) of the latent Gaussian
   - Reparameterisation trick: z = μ + σ * ε, ε ~ N(0,1)
   - Loss = MSE reconstruction + β * KL divergence
@@ -8,12 +8,12 @@ Extends B4 (deterministic AE) with a probabilistic bottleneck:
   - β annealing: starts at 0, linearly ramps to β_max over first 20 epochs
     (prevents posterior collapse in early training)
 
-Two-stage pipeline (same as B4 for fair comparison):
+Two-stage pipeline:
   Stage 1: VAE pre-training (unsupervised, recon + KL)
   Stage 2: CNN-1D classifier on frozen μ (mean of latent posterior)
 
-Key difference from B4 (AE): probabilistic latent space imposes a
-structured N(0,1) prior which may disentangle stutter-type factors.
+The probabilistic latent space imposes a structured N(0,1) prior which may
+disentangle stutter-type factors.
 
 Run command:
     python experiments/B5_vae_cnn.py \
@@ -277,17 +277,14 @@ def main() -> None:
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
 
     # ------------------------------------------------------------------
     # 1. Features + labels
     # ------------------------------------------------------------------
-    print(f"\nLoading HuBERT-large layer {args.hubert_layer} cache ...")
     ssl_feats = load_ssl_cache(args.features_root, args.hubert_alias, args.fold, args.hubert_layer)
     if ssl_feats.ndim != 2:
         ssl_feats = ssl_feats.reshape(ssl_feats.shape[0], -1)
     n = ssl_feats.shape[0]
-    print(f"  SSL features: {ssl_feats.shape}")
 
     label_map: Dict[Tuple[str, str, str], np.ndarray] = {}
     label_map.update(load_multilabel_map(args.sep_labels))
@@ -297,10 +294,6 @@ def main() -> None:
         [label_map.get(k, np.zeros(len(STUTTER_TYPES), dtype=np.float32)) for k in clip_keys],
         dtype=np.float32,
     )
-    print(f"\nDataset: {n} samples | Label distribution:")
-    for i, t in enumerate(STUTTER_TYPES):
-        pos = int(y[:, i].sum())
-        print(f"  {t:15s}: {pos:5d} pos  ({pos/n:.2%})")
 
     # ------------------------------------------------------------------
     # 2. Split + StandardScaler
@@ -321,12 +314,6 @@ def main() -> None:
     vae = VAE(in_dim, hidden_dims, args.latent_dim, args.vae_dropout).to(device)
     vae_params = sum(p.numel() for p in vae.parameters())
 
-    print(f"\n{'='*60}")
-    print(f"STAGE 1: β-VAE Pre-training ({args.vae_epochs} epochs, β_max={args.beta_max})")
-    print(f"{'='*60}")
-    print(f"  Architecture: {in_dim}→{hidden_dims}→(μ,σ²):{args.latent_dim}→...→{in_dim}")
-    print(f"  VAE parameters: {vae_params:,}")
-    print(f"  β annealing: 0 → {args.beta_max} over {args.beta_warmup} epochs")
 
     vae_dl = DataLoader(TensorDataset(torch.from_numpy(x_tr_raw)),
                         batch_size=args.batch_size, shuffle=True, num_workers=0, pin_memory=True)
@@ -363,12 +350,10 @@ def main() -> None:
             best_vae_loss = tr_loss
             torch.save(vae.state_dict(), vae_ckpt)
 
-    print(f"  VAE training done. Best total_loss={best_vae_loss:.6f}")
 
     # ------------------------------------------------------------------
     # 4. Extract μ (mean of posterior = deterministic latent)
     # ------------------------------------------------------------------
-    print(f"\nExtracting {args.latent_dim}-dim μ (posterior mean) features ...")
     vae.load_state_dict(torch.load(vae_ckpt, map_location=device))
     vae.eval()
 
@@ -386,24 +371,17 @@ def main() -> None:
     z_sc = StandardScaler()
     z_tr = z_sc.fit_transform(z_tr).astype(np.float32)
     z_te = z_sc.transform(z_te).astype(np.float32)
-    print(f"  Latent (μ): train={z_tr.shape}, test={z_te.shape}")
-    print(f"  μ stats: mean={z_tr.mean():.4f}, std={z_tr.std():.4f}")
 
     y_tr, y_te = y[train_idx], y[test_idx]
 
     # ------------------------------------------------------------------
     # 5. CNN-1D Classifier (Stage 2)
     # ------------------------------------------------------------------
-    print(f"\n{'='*60}")
-    print(f"STAGE 2: CNN-1D Classifier ({args.clf_epochs} epochs)")
-    print(f"{'='*60}")
 
     channels = [int(c) for c in args.cnn_channels.split(",")]
     model  = CNN1DMultiLabel(in_dim=args.latent_dim, channels=channels,
                               num_classes=len(STUTTER_TYPES), dropout=args.clf_dropout).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"  CNN-1D parameters: {n_params:,}")
-    print(f"  Input: {args.latent_dim}-dim VAE μ (posterior mean)")
 
     sw = compute_sample_weights(y_tr)
     sampler  = WeightedRandomSampler(torch.from_numpy(sw), len(sw), replacement=True)
@@ -476,12 +454,6 @@ def main() -> None:
         print(f"    {t:15s}: F1={test_m[f'f1_{t}']:.5f}  "
               f"P={test_m[f'pre_{t}']:.5f}  R={test_m[f'rec_{t}']:.5f}  "
               f"AUPRC={test_m[f'auprc_{t}']:.5f}")
-    print(f"\n  [Complete B-series comparison]")
-    print(f"    B1 PCA-32    : macro_f1 ≈ 0.490 (best)")
-    print(f"    B3 MDS-32    : 0.464 ⚠️")
-    print(f"    B2 KPCA-32   : 0.394 ⛔")
-    print(f"    B4 AE-32     : 0.378 ⛔")
-    print(f"    B5 VAE-32 μ  : {test_m['macro_f1']:.5f}")
 
     # ------------------------------------------------------------------
     # 7. Save
@@ -535,7 +507,7 @@ def main() -> None:
         axes[0].set_xlabel("Epoch"); axes[0].set_ylabel("Loss (MLSM)")
         axes[0].legend(); axes[0].grid(alpha=0.3)
         axes[1].plot(ep_x, [r["macro_f1"] for r in history], color="mediumvioletred", marker="o", ms=4)
-        axes[1].axhline(0.49, ls="--", color="steelblue", alpha=0.5, label="B1 PCA baseline")
+        
         axes[1].axvline(x=history[best_ep_idx]["epoch"], ls="--", color="red", alpha=0.6,
                         label=f"best={best_macro_f1:.4f}")
         axes[1].set_title("B5 Validation Macro-F1"); axes[1].set_xlabel("Epoch")
@@ -557,15 +529,8 @@ def main() -> None:
         ax2.set_xlabel("Stutter Type"); ax2.set_ylabel("F1"); ax2.legend()
         fig2.tight_layout()
         fig2.savefig(args.fig_dir / "b5_perclass_f1.png", dpi=160); plt.close(fig2)
-        print(f"  Saved: {args.fig_dir / 'b5_train_curves.png'}")
-        print(f"  Saved: {args.fig_dir / 'b5_perclass_f1.png'}")
     except Exception as exc:
         print(f"  [WARN] Figure generation failed: {exc}")
-
-    print("\n✅  B5 complete.")
-    print(f"   Report   : {args.out_dir / 'b5_run_report.json'}")
-    print(f"   VAE ckpt : {vae_ckpt}")
-    print(f"   Clf ckpt : {best_ckpt}")
 
 
 if __name__ == "__main__":

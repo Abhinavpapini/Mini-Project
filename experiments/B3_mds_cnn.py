@@ -4,9 +4,9 @@ Landmark MDS reduces feature dimensionality while PRESERVING PAIRWISE DISTANCES
 (rather than maximising variance like PCA, or kernel structure like KPCA).
 
 Pipeline:
-  HuBERT(1024) → StandardScaler → PCA-128 (pre-reduce)
-  → Landmark MDS-32 (fit on 3000 landmarks, out-of-sample via linear regression)
-  → StandardScaler → CNN-1D (same as F1/B1/B2) → MLSM loss
+    HuBERT(1024) → StandardScaler → PCA-128 (pre-reduce)
+    → Landmark MDS-32 (fit on 3000 landmarks, out-of-sample via linear regression)
+    → StandardScaler → CNN-1D → MLSM loss
 
 Landmark MDS steps:
   1. Select 3000 landmark points from training data
@@ -89,7 +89,7 @@ def parse_args() -> argparse.Namespace:
                    help="Use metric MDS (True=Euclidean distances preserved)")
     p.add_argument("--ridge-alpha",    type=float,default=1.0,
                    help="Ridge regression alpha for out-of-sample extension")
-    # CNN params (same as B1/B2)
+    # CNN params
     p.add_argument("--cnn-channels",   type=str,  default="64,128,256")
     p.add_argument("--dropout",        type=float,default=0.3)
     # Training
@@ -158,7 +158,7 @@ def compute_sample_weights(y: np.ndarray) -> np.ndarray:
 
 
 # ---------------------------------------------------------------------------
-# CNN-1D (same as B1/B2/F1 for fair ablation)
+# CNN-1D
 # ---------------------------------------------------------------------------
 
 class CNN1DMultiLabel(nn.Module):
@@ -221,17 +221,14 @@ def main() -> None:
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
 
     # ------------------------------------------------------------------
     # 1. Features + labels
     # ------------------------------------------------------------------
-    print(f"\nLoading HuBERT-large layer {args.hubert_layer} cache ...")
     ssl_feats = load_ssl_cache(args.features_root, args.hubert_alias, args.fold, args.hubert_layer)
     if ssl_feats.ndim != 2:
         ssl_feats = ssl_feats.reshape(ssl_feats.shape[0], -1)
     n = ssl_feats.shape[0]
-    print(f"  SSL features: {ssl_feats.shape}")
 
     label_map: Dict[Tuple[str, str, str], np.ndarray] = {}
     label_map.update(load_multilabel_map(args.sep_labels))
@@ -241,10 +238,6 @@ def main() -> None:
         [label_map.get(k, np.zeros(len(STUTTER_TYPES), dtype=np.float32)) for k in clip_keys],
         dtype=np.float32,
     )
-    print(f"\nDataset: {n} samples | Label distribution:")
-    for i, t in enumerate(STUTTER_TYPES):
-        pos = int(y[:, i].sum())
-        print(f"  {t:15s}: {pos:5d} pos  ({pos/n:.2%})")
 
     # ------------------------------------------------------------------
     # 2. Train/test split
@@ -262,12 +255,10 @@ def main() -> None:
     x_te_sc = sc.transform(ssl_feats[test_idx])
     x_all_sc = sc.transform(ssl_feats)
 
-    print(f"\nPre-PCA: 1024 → {args.pre_pca_dim} ...")
     pre_pca = PCA(n_components=args.pre_pca_dim, random_state=args.seed)
     x_tr_pre = pre_pca.fit_transform(x_tr_sc)     # [N_train, 128]
     x_te_pre = pre_pca.transform(x_te_sc)          # [N_test, 128]
     x_all_pre = pre_pca.transform(x_all_sc)        # [N_all, 128]
-    print(f"  Pre-PCA expl_var: {pre_pca.explained_variance_ratio_.sum():.3f}")
 
     # ------------------------------------------------------------------
     # 4. Landmark MDS (fit on N_landmarks training points)
@@ -277,8 +268,6 @@ def main() -> None:
     lm_idx = rng.choice(len(train_idx), size=n_lm, replace=False)
     x_lm   = x_tr_pre[lm_idx]    # [n_lm, 128] — landmark points in PCA-128 space
 
-    print(f"\nLandmark MDS ({n_lm} points, n_components={args.mds_dim}, metric=True) ...")
-    print(f"  Building {n_lm}×{n_lm} distance matrix ...")
     mds = MDS(
         n_components=args.mds_dim,
         metric=True,
@@ -290,13 +279,11 @@ def main() -> None:
     )
     z_lm = mds.fit_transform(x_lm)   # [n_lm, 32] — MDS 32-dim embedding of landmarks
     stress = mds.stress_
-    print(f"  MDS stress: {stress:.4f} (lower=better distance preservation)")
 
     # ------------------------------------------------------------------
     # 5. Out-of-sample extension via Ridge Regression
     #    Map: PCA-128 landmarks → MDS-32 landmarks, then apply to all
     # ------------------------------------------------------------------
-    print(f"\nOut-of-sample extension (Ridge α={args.ridge_alpha}) ...")
     ridge = Ridge(alpha=args.ridge_alpha, fit_intercept=True)
     ridge.fit(x_lm, z_lm)
 
@@ -311,10 +298,6 @@ def main() -> None:
     # Reference: what linear PCA-32 would give (from pre-PCA-128 space)
     pca32_ref = PCA(n_components=args.mds_dim, random_state=args.seed)
     pca32_ref.fit(x_tr_pre)
-    print(f"  Linear PCA-{args.mds_dim} expl_var (from PCA-128): "
-          f"{pca32_ref.explained_variance_ratio_.sum():.3f}")
-    print(f"  MDS-{args.mds_dim}: distance-preserving (stress={stress:.4f})")
-    print(f"  Input to CNN: [{args.mds_dim}-dim MDS embedding]")
 
     y_tr, y_te = y[train_idx], y[test_idx]
 
@@ -329,15 +312,12 @@ def main() -> None:
                           batch_size=args.batch_size, shuffle=False, num_workers=0, pin_memory=True)
 
     # ------------------------------------------------------------------
-    # 7. Model (identical to B1/B2/F1)
+    # 7. Model
     # ------------------------------------------------------------------
     channels = [int(c) for c in args.cnn_channels.split(",")]
     model    = CNN1DMultiLabel(in_dim=args.mds_dim, channels=channels,
                                num_classes=len(STUTTER_TYPES), dropout=args.dropout).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"\nB3 model parameters: {n_params:,}")
-    print(f"  CNN-1D: {args.mds_dim}→{channels}→5 (same arch as F1/B2)")
-    print(f"  Reduction: PCA-128 → MDS-{args.mds_dim} (landmark={n_lm})")
 
     criterion = nn.MultiLabelSoftMarginLoss()
     opt       = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -347,7 +327,6 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 8. Training
     # ------------------------------------------------------------------
-    print(f"\nTraining for {args.epochs} epochs ...")
     history: List[Dict] = []
     best_macro_f1 = -1.0
     best_ckpt = args.ckpt_dir / "b3_best.pt"
@@ -408,10 +387,6 @@ def main() -> None:
         print(f"    {t:15s}: F1={test_m[f'f1_{t}']:.5f}  "
               f"P={test_m[f'pre_{t}']:.5f}  R={test_m[f'rec_{t}']:.5f}  "
               f"AUPRC={test_m[f'auprc_{t}']:.5f}")
-    print(f"\n  [B3 vs baselines]")
-    print(f"    B1 linear PCA-32 : expected macro_f1 ≈ 0.48-0.50")
-    print(f"    B2 KPCA-RBF-32   : macro_f1 = 0.394 (negative)")
-    print(f"    B3 MDS-32        : macro_f1 = {test_m['macro_f1']:.5f}")
 
     # ------------------------------------------------------------------
     # 10. Save
@@ -485,14 +460,8 @@ def main() -> None:
         ax2.set_xlabel("Stutter Type"); ax2.set_ylabel("F1"); ax2.legend()
         fig2.tight_layout()
         fig2.savefig(args.fig_dir / "b3_perclass_f1.png", dpi=160); plt.close(fig2)
-        print(f"  Saved: {args.fig_dir / 'b3_train_curves.png'}")
-        print(f"  Saved: {args.fig_dir / 'b3_perclass_f1.png'}")
     except Exception as exc:
         print(f"  [WARN] Figure generation failed: {exc}")
-
-    print("\n✅  B3 complete.")
-    print(f"   Report : {args.out_dir / 'b3_run_report.json'}")
-    print(f"   Ckpt   : {best_ckpt}")
 
 
 if __name__ == "__main__":

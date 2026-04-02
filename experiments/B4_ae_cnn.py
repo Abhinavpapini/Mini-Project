@@ -77,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--ae-dropout",     type=float,default=0.1)
     p.add_argument("--ae-epochs",      type=int,  default=50)
     p.add_argument("--ae-lr",          type=float,default=5e-4)
-    # CNN classifier params (same as B1/B2/B3)
+    # CNN classifier params
     p.add_argument("--cnn-channels",   type=str,  default="64,128,256")
     p.add_argument("--clf-dropout",    type=float,default=0.3)
     p.add_argument("--clf-epochs",     type=int,  default=30)
@@ -367,7 +367,7 @@ def main() -> None:
     y_tr, y_te = y[train_idx], y[test_idx]
 
     # ------------------------------------------------------------------
-    # 5. CNN-1D Classifier (Stage 2 — same as B1/B2/B3)
+    # 5. CNN-1D Classifier (Stage 2)
     # ------------------------------------------------------------------
     print(f"\n{'='*60}")
     print(f"STAGE 2: CNN-1D Classifier ({args.clf_epochs} epochs)")
@@ -451,11 +451,6 @@ def main() -> None:
         print(f"    {t:15s}: F1={test_m[f'f1_{t}']:.5f}  "
               f"P={test_m[f'pre_{t}']:.5f}  R={test_m[f'rec_{t}']:.5f}  "
               f"AUPRC={test_m[f'auprc_{t}']:.5f}")
-    print(f"\n  [B4 vs B-series comparison]")
-    print(f"    B1 linear PCA-32 : expected macro_f1 ≈ 0.48-0.50")
-    print(f"    B2 KPCA-RBF-32   : 0.394 ⛔")
-    print(f"    B3 MDS-32        : 0.464 ⚠️")
-    print(f"    B4 AE-32         : {test_m['macro_f1']:.5f}")
 
     # ------------------------------------------------------------------
     # 7. Save
@@ -509,7 +504,6 @@ def main() -> None:
         axes[0].legend(); axes[0].grid(alpha=0.3)
 
         axes[1].plot(ep_x, [r["macro_f1"] for r in history], color="teal", marker="o", ms=4)
-        axes[1].axhline(0.49, ls="--", color="steelblue", alpha=0.5, label="B1 PCA baseline")
         axes[1].axvline(x=history[best_ep_idx]["epoch"], ls="--", color="red", alpha=0.6,
                         label=f"best={best_macro_f1:.4f}")
         axes[1].set_title("B4 Validation Macro-F1"); axes[1].set_xlabel("Epoch")

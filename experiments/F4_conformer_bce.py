@@ -418,7 +418,7 @@ def main() -> None:
         print(f"  {t:15s}: {pw:.4f}")
 
     # ------------------------------------------------------------------
-    # 6. Class-balanced sampler (same as F1 for fair comparison)
+    # 6. Class-balanced sampler
     # ------------------------------------------------------------------
     sample_weights = compute_sample_weights(y_tr)
     sampler = WeightedRandomSampler(

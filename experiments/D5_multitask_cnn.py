@@ -156,7 +156,7 @@ class D5MultiTaskCNN(nn.Module):
 
     def __init__(self, in_dim: int, dropout: float) -> None:
         super().__init__()
-        # Shared backbone (same depth as F1 CNN for fair comparison)
+        # Shared backbone (3-layer CNN)
         self.backbone = nn.Sequential(
             nn.Conv1d(1, 64,  kernel_size=7, padding=3),
             nn.BatchNorm1d(64),

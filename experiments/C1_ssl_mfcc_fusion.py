@@ -1,4 +1,4 @@
-"""C1: SSL + MFCC fusion baseline with MFCC-dimension sweep.
+"""C1: SSL + MFCC fusion experiment with MFCC-dimension sweep.
 
 Workflow:
 1) Load cached SSL features from artifacts/features/<model>/<fold>/layer_<k>.npy
@@ -37,7 +37,7 @@ LABEL_COLUMNS = {
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="C1 SSL+MFCC fusion baseline")
+    p = argparse.ArgumentParser(description="C1 SSL+MFCC fusion experiment")
     p.add_argument("--features-root", type=Path, default=Path("artifacts/features"))
     p.add_argument("--model-alias", type=str, default="wav2vec2-base")
     p.add_argument("--fold", type=str, default="fold0")
@@ -300,7 +300,7 @@ def main() -> None:
         mfcc = np.stack(feats, axis=0)
         np.save(mfcc_cache, mfcc)
 
-    # Shared train/test split for fair MFCC-dim comparison.
+    # Shared train/test split for MFCC-dim sweep.
     indices = np.arange(n)
     train_idx, test_idx = train_test_split(
         indices,

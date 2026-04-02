@@ -3,15 +3,14 @@
 Extends E1 (GCN) by replacing uniform neighbour aggregation with LEARNED
 per-edge attention weights (Veličković et al., 2018 — Graph Attention Networks).
 
-Key difference vs E1:
-  E1 GCN : h_i = ReLU(sum_j (norm) * W * h_j)         uniform weights
-  E2 GAT : h_i = ReLU(sum_j  α_ij  * W * h_j)         learned attention
+Model summary:
+    h_i = ReLU(sum_j α_ij * W * h_j) with learned attention weights
 
 Attention: α_ij = softmax_j( LeakyReLU( a^T [W*h_i || W*h_j] ) )
 Multi-head: K heads, output concatenated (layer 1) or averaged (layer 2)
 
-Graph: same k-NN cosine similarity graph as E1 (k=10, 20906 nodes)
-Features: PCA-64 (E2 uses wider feature set than E1's 32)
+Graph: k-NN cosine similarity graph (k=10, 20906 nodes)
+Features: PCA-64
 Loss: MultiLabelSoftMarginLoss + L2 reg
 
 Run command:
@@ -97,7 +96,7 @@ def parse_args() -> argparse.Namespace:
 
 
 # ---------------------------------------------------------------------------
-# Data utilities (same as E1)
+# Data utilities
 # ---------------------------------------------------------------------------
 
 def norm_text(x: object) -> str:

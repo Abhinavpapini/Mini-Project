@@ -196,7 +196,7 @@ class GRLModel(nn.Module):
             nn.Linear(in_dim, 64), nn.BatchNorm1d(64), nn.GELU(), nn.Dropout(dropout * 0.5),
             nn.Linear(64, bottleneck), nn.BatchNorm1d(bottleneck), nn.GELU(),
         )
-        # Stutter classifier head (CNN-1D, same as F1 baseline)
+        # Stutter classifier head (CNN-1D)
         cnn_layers: List[nn.Module] = []
         c_in = 1
         for c_out in channels:

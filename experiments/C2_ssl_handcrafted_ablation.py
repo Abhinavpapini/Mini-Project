@@ -1,11 +1,11 @@
-"""C2: SSL + handcrafted groups ablation baseline.
+"""C2: SSL + handcrafted feature group sweep.
 
 Workflow:
 1) Load cached SSL features from artifacts/features/<model>/<fold>/layer_<k>.npy
 2) Build or load handcrafted feature cache aligned to clip ordering
 3) Reduce SSL to PCA-32 and concatenate selected handcrafted groups
-4) Train CNN-1D classifier for each ablation setting
-5) Save ablation table, best-run report, history, and figure
+4) Train CNN-1D classifier for each group setting
+5) Save sweep table, best-run report, history, and figure
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ GROUPS = {
 
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="C2 SSL+handcrafted ablation baseline")
+    p = argparse.ArgumentParser(description="C2 SSL+handcrafted group sweep")
     p.add_argument("--features-root", type=Path, default=Path("artifacts/features"))
     p.add_argument("--model-alias", type=str, default="wav2vec2-base")
     p.add_argument("--fold", type=str, default="fold0")
@@ -475,7 +475,7 @@ def main() -> None:
         fig = plt.figure(figsize=(10, 4.8))
         ax = fig.add_subplot(111)
         ax.bar(labels, f1s)
-        ax.set_title(f"C2 Handcrafted Group Ablation ({args.target}, {args.model_alias}, layer {args.layer})")
+        ax.set_title(f"C2 Handcrafted Group Sweep ({args.target}, {args.model_alias}, layer {args.layer})")
         ax.set_xlabel("Setting")
         ax.set_ylabel("F1")
         ax.tick_params(axis="x", rotation=25)
@@ -488,7 +488,7 @@ def main() -> None:
 
     print("C2 completed.")
     print(f"Report: {report_json}")
-    print(f"Ablation: {ablation_csv}")
+    print(f"Sweep table: {ablation_csv}")
     print(f"Best history: {best_hist_csv}")
     print(f"Groups: {group_meta_json}")
     if fig_path:

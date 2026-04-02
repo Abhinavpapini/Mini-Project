@@ -5,8 +5,8 @@ UMAP preserves both LOCAL topology (like t-SNE) and GLOBAL structure
 
 Pipeline:
   HuBERT(1024) → StandardScaler
-  → UMAP(n_components=32, n_neighbors=15, min_dist=0.1)
-  → StandardScaler → CNN-1D (same as B1/B2/B3/B4/B5)
+    → UMAP(n_components=32, n_neighbors=15, min_dist=0.1)
+    → StandardScaler → CNN-1D classifier
 
 UMAP out-of-sample extension: fitted UMAP transform() is used for
 test samples (parametric-style, supported by umap-learn library).
@@ -70,7 +70,7 @@ def parse_args() -> argparse.Namespace:
                    help="Linear PCA before UMAP (speeds up UMAP on high-dim data)")
     p.add_argument("--umap-dim",      type=int,  default=32)
     p.add_argument("--n-neighbors",   type=int,  default=15,
-                   help="UMAP n_neighbors: controls local vs global structure balance")
+                   help="UMAP n_neighbors: balances local and global structure")
     p.add_argument("--min-dist",      type=float,default=0.1,
                    help="UMAP min_dist: controls embedding compactness")
     p.add_argument("--umap-metric",   type=str,  default="euclidean")
@@ -206,17 +206,14 @@ def main() -> None:
 
     torch.manual_seed(args.seed); np.random.seed(args.seed)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
 
     # ------------------------------------------------------------------
     # 1. Features + labels
     # ------------------------------------------------------------------
-    print(f"\nLoading HuBERT-large layer {args.hubert_layer} cache ...")
     ssl_feats = load_ssl_cache(args.features_root, args.hubert_alias, args.fold, args.hubert_layer)
     if ssl_feats.ndim != 2:
         ssl_feats = ssl_feats.reshape(ssl_feats.shape[0], -1)
     n = ssl_feats.shape[0]
-    print(f"  SSL features: {ssl_feats.shape}")
 
     label_map: Dict[Tuple[str, str, str], np.ndarray] = {}
     label_map.update(load_multilabel_map(args.sep_labels))
@@ -226,10 +223,6 @@ def main() -> None:
         [label_map.get(k, np.zeros(len(STUTTER_TYPES), dtype=np.float32)) for k in clip_keys],
         dtype=np.float32,
     )
-    print(f"\nDataset: {n} samples | Label distribution:")
-    for i, t in enumerate(STUTTER_TYPES):
-        pos = int(y[:, i].sum())
-        print(f"  {t:15s}: {pos:5d} pos  ({pos/n:.2%})")
 
     # ------------------------------------------------------------------
     # 2. Train/test split
@@ -247,11 +240,9 @@ def main() -> None:
     x_te_sc = sc.transform(ssl_feats[test_idx])
 
     if args.pre_pca_dim and args.pre_pca_dim < ssl_feats.shape[1]:
-        print(f"\nPre-PCA: {ssl_feats.shape[1]} → {args.pre_pca_dim} ...")
         pre_pca = PCA(n_components=args.pre_pca_dim, random_state=args.seed)
         x_tr_sc = pre_pca.fit_transform(x_tr_sc)
         x_te_sc = pre_pca.transform(x_te_sc)
-        print(f"  Pre-PCA expl_var: {pre_pca.explained_variance_ratio_.sum():.3f}")
 
     # ------------------------------------------------------------------
     # 4. UMAP dimensionality reduction
@@ -263,9 +254,6 @@ def main() -> None:
             "umap-learn not installed. Run: pip install umap-learn"
         )
 
-    print(f"\nUMAP (n_components={args.umap_dim}, n_neighbors={args.n_neighbors}, "
-          f"min_dist={args.min_dist}) ...")
-    print(f"  Fitting on {len(train_idx)} training samples ...")
     reducer = umap.UMAP(
         n_components=args.umap_dim,
         n_neighbors=args.n_neighbors,
@@ -276,14 +264,12 @@ def main() -> None:
         verbose=False,
     )
     x_tr_umap = reducer.fit_transform(x_tr_sc).astype(np.float32)
-    print(f"  Transforming test set ...")
     x_te_umap = reducer.transform(x_te_sc).astype(np.float32)
 
     # Normalise UMAP output
     umap_sc = StandardScaler()
     x_tr_umap = umap_sc.fit_transform(x_tr_umap).astype(np.float32)
     x_te_umap = umap_sc.transform(x_te_umap).astype(np.float32)
-    print(f"  UMAP-{args.umap_dim} done. train={x_tr_umap.shape}, test={x_te_umap.shape}")
 
     y_tr, y_te = y[train_idx], y[test_idx]
 
@@ -304,10 +290,6 @@ def main() -> None:
     model    = CNN1DMultiLabel(in_dim=args.umap_dim, channels=channels,
                                num_classes=len(STUTTER_TYPES), dropout=args.dropout).to(device)
     n_params = sum(p.numel() for p in model.parameters())
-    print(f"\nB6 model parameters: {n_params:,}")
-    print(f"  CNN-1D: {args.umap_dim}→{channels}→5")
-    print(f"  Reduction: UMAP-{args.umap_dim} (n_neighbors={args.n_neighbors}, "
-          f"min_dist={args.min_dist})")
 
     criterion = nn.MultiLabelSoftMarginLoss()
     opt       = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
@@ -317,7 +299,6 @@ def main() -> None:
     # ------------------------------------------------------------------
     # 7. Training
     # ------------------------------------------------------------------
-    print(f"\nTraining for {args.epochs} epochs ...")
     history: List[Dict] = []
     best_macro_f1 = -1.0
     best_ckpt = args.ckpt_dir / "b6_best.pt"

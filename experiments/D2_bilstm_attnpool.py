@@ -9,10 +9,9 @@ Architecture:
 Key value: interpretable attention over feature positions — which PCA
 components the model attends to when predicting each stutter type.
 
-Ablation vs D1: BiLSTM recurrent vs Conformer (MHSA + conv)
-  - D2 uses 64-dim PCA (more features than D1's 32)
-  - D2 BiLSTM processes feature positions sequentially
-  - D2 provides per-position attention weights for interpretability
+Notes:
+    - D2 uses 64-dim PCA and processes feature positions sequentially.
+    - D2 provides per-position attention weights for interpretability.
 
 Run command:
     python experiments/D2_bilstm_attnpool.py \
