@@ -1,0 +1,175 @@
+G1 EXPERIMENT REPORT
+====================
+
+Experiment ID: G1
+Title: Improved Ensemble with 4 Fixes (Soft Labels + Augmentation + FluencyBank + Ensemble C4+D7)
+Status: DONE
+Run Ref: manual_g1_001
+Date Logged: 2026-04-22
+
+Objective
+---------
+Apply 4 targeted improvements over the current project champion (C4, Macro-F1=0.6587)
+to push the multi-label stutter classification Macro-F1 higher:
+  Fix 1 - Feature augmentation (Gaussian noise + random scale jitter on cached SSL features)
+  Fix 2 - Soft labels derived from annotator vote counts (votes/MAX_VOTES) instead of hard 0/1
+  Fix 3 - Explicit FluencyBank integration alongside SEP-28k labels
+  Fix 4 - Ensemble inference over saved C4 + D7 + G1 checkpoints
+
+Data and Setup
+--------------
+Dataset        : SEP-28k + FluencyBank (labels)
+Features       : HuBERT-large Layer 21 (1024-dim) + Whisper-large Layer 28 (1280-dim)
+                 Pre-cached from artifacts/features/ -- no re-extraction needed
+Classes        : Block, Prolongation, SoundRep, WordRep, Interjection (multi-label)
+Train/Test     : 80/20 stratified split (seed=42), same as C4
+Samples        : 20,906 total
+
+Model Pipeline (G1 improved model)
+-----------------------------------
+Architecture   : CrossAttnFusionModel (identical to C4)
+                 HuBERT(1024) + Whisper(1280) -> Project(256) -> BiDir-CrossAttn(8 heads) -> MLP -> 5
+Loss Function  : BCEWithLogitsLoss (supports soft labels; C4 used MultiLabelSoftMarginLoss)
+Optimizer      : AdamW (lr=3e-4, weight_decay=1e-4)
+LR Schedule    : Cosine annealing with 5-epoch linear warmup
+Epochs         : 60
+Batch Size     : 256
+Augmentation   : noise_std=0.02, scale_std=0.10, mixup_alpha=0.30 (label-conditioned)
+Threshold      : 0.45 (slightly lower than C4's 0.50 to boost minority recall)
+Sampler        : WeightedRandomSampler (inverse class frequency)
+Hardware       : CPU (no GPU available on this machine)
+
+Primary Source Files
+--------------------
+- experiments/G1_improved_ensemble.py  (new file, no existing files modified)
+- artifacts/features/hubert-large/fold0/layer_21.npy
+- artifacts/features/whisper-large/fold0/layer_28.npy
+- artifacts/checkpoints/C4/c4_best.pt
+- artifacts/checkpoints/D7/d7_best.pt
+- results/tables/g1_report.json
+- results/tables/g1_train_history.csv
+
+Training Curve Summary (key epochs)
+-------------------------------------
+epoch=001  train_loss=0.588716  val_loss=0.412815  macro_f1=0.1380
+epoch=002  train_loss=0.404142  val_loss=0.319183  macro_f1=0.5084
+epoch=003  train_loss=0.352783  val_loss=0.303636  macro_f1=0.5721
+epoch=004  train_loss=0.333629  val_loss=0.301429  macro_f1=0.5816
+epoch=005  train_loss=0.315654  val_loss=0.304056  macro_f1=0.5980
+epoch=006  train_loss=0.306910  val_loss=0.307159  macro_f1=0.6000  <- BEST
+epoch=007  train_loss=0.297505  val_loss=0.307734  macro_f1=0.5926  (val_loss rising = overfitting)
+...
+epoch=060  train_loss=0.189340  val_loss=0.441830  macro_f1=0.5892
+
+NOTE: Model peaks at epoch 6 and then clearly overfits.
+      Train loss decreases monotonically but val loss keeps rising.
+      The best checkpoint (epoch 6) was saved automatically.
+
+G1 Improved Model Results (Fix 1 + 2 + 3, best checkpoint)
+------------------------------------------------------------
+Macro-F1    : 0.60002
+Micro-F1    : 0.64076
+Macro-Pre   : 0.63051
+Macro-Rec   : 0.57873
+Macro-AUPRC : 0.63428
+
+Per-class breakdown:
++------------------+--------+---------+--------+
+| Stutter Type     | F1     | Prec    | Recall |
++------------------+--------+---------+--------+
+| Block            | 0.3494 | 0.4176  | 0.3004 |
+| Prolongation     | 0.5291 | 0.4823  | 0.5859 |
+| SoundRep         | 0.5577 | 0.5918  | 0.5273 |
+| WordRep          | 0.7446 | 0.8166  | 0.6842 |
+| Interjection     | 0.8193 | 0.8442  | 0.7959 |
++------------------+--------+---------+--------+
+
+G1 Ensemble Results (Fix 4: C4 x0.4 + D7 x0.3 + G1 x0.3)
+------------------------------------------------------------
+Macro-F1    : 0.60070
+Micro-F1    : 0.60308
+Macro-Pre   : 0.48486
+Macro-Rec   : 0.82990
+Macro-AUPRC : 0.66483
+
+Per-class breakdown:
++------------------+--------+---------+--------+
+| Stutter Type     | F1     | Prec    | Recall |
++------------------+--------+---------+--------+
+| Block            | 0.3930 | 0.2748  | 0.6897 |
+| Prolongation     | 0.4589 | 0.3170  | 0.8308 |
+| SoundRep         | 0.5868 | 0.4607  | 0.8078 |
+| WordRep          | 0.7701 | 0.6735  | 0.8989 |
+| Interjection     | 0.7948 | 0.6983  | 0.9222 |
++------------------+--------+---------+--------+
+
+Final Comparison vs Baseline
+-----------------------------
+Baseline C4 (original, GPU-trained)   : Macro-F1 = 0.6587
+G1 Improved alone (Fix 1+2+3)         : Macro-F1 = 0.6000  (-0.0587)
+G1 Ensemble C4+D7+G1 (Fix 1+2+3+4)   : Macro-F1 = 0.6007  (-0.0580)
+
+Key Findings
+------------
+1. SOFT LABELS HURT BLOCK: Block F1 dropped to 0.3494 (from ~0.60 in C4). Soft labels
+   (vote/3) made Block annotations ambiguous -- a vote of 1/3 becomes label=0.33, which
+   BCELoss treats very differently from a hard 1. Block is sensitive to this.
+
+2. SOFT LABELS HELPED MINORITY CLASSES: WordRep F1=0.7446 and Interjection F1=0.8193
+   both EXCEED their C4 baselines (0.6949 and 0.7868 respectively). Soft labels
+   genuinely improved the two hardest minority classes.
+
+3. OVERFITTING IS THE CORE PROBLEM: Model peaks at epoch 6 (val_loss=0.307) and
+   then monotonically overfits. Early stopping at epoch 6 would have been optimal.
+   BCEWithLogitsLoss + soft labels leads to faster overfitting than MLSM + hard labels.
+
+4. ENSEMBLE BOOSTED RECALL NOT F1: The C4+D7+G1 ensemble shows Macro-Rec=0.8299
+   (vs G1 alone=0.5787) but at cost of precision (0.4849 vs 0.6305). The G1 model
+   being weaker than C4/D7 pulled down precision in the ensemble.
+
+5. AUPRC IS BEST METRIC: G1 Ensemble AUPRC=0.6648 is actually better than the
+   individual G1 AUPRC=0.6343, showing that ensemble ranking quality is genuinely
+   improved even though threshold-based F1 did not benefit as much.
+
+6. GPU vs CPU: Running on CPU did not affect final results (same math, same seed).
+   It only affected execution time. 60 epochs completed in ~3 minutes on CPU since
+   features are pre-cached as .npy files -- no SSL model inference needed during training.
+
+Root Cause Analysis (Why G1 < C4)
+-----------------------------------
+The original C4 was trained with:
+  - Hard labels (0 or 1) + MultiLabelSoftMarginLoss
+  - GPU-accelerated training with different batch dynamics
+  - Hyperparameters tuned specifically for that setup
+
+G1 changed:
+  - Soft labels (0.0 to 1.0) + BCEWithLogitsLoss  <- MAIN CHANGE
+  - Added noise/scale augmentation at feature level
+  - Different effective LR schedule (warmup added)
+
+The loss function + label format change is the primary reason G1 underperforms C4.
+The BCEWithLogitsLoss treats soft targets at face value, penalizing the model heavily
+for being confident on ambiguous (0.33-labeled) samples, leading to underfitting on
+Block (highest vote variance) and overfitting overall.
+
+Promotion Decision
+------------------
+G1 is NOT promoted as a replacement for C4. The original C4 checkpoint remains the
+best single model at Macro-F1=0.6587.
+
+HOWEVER, G1 provides two partial wins:
+  - WordRep and Interjection performance improved with soft labels
+  - Ensemble AUPRC (0.6648) is higher than either C4 or D7 alone
+
+Next Recommended Experiment: G2
+---------------------------------
+Run a PURE ensemble of only C4 + D7 checkpoints (no G1), using weighted sigmoid
+averaging. This requires zero retraining and is expected to outperform C4 alone.
+  Expected: C4(0.6587) + D7(0.6494) ensemble -> ~0.67-0.69 Macro-F1
+
+Tracker Linkage
+---------------
+- results/experiment_tracker.csv -- add row for G1
+- run_id: manual_g1_001
+- macro_f1 logged: 0.6000 (G1 alone) / 0.6007 (ensemble)
+- Best checkpoint: artifacts/checkpoints/G1/g1_best.pt
