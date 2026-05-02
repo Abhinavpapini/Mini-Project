@@ -1,24 +1,24 @@
 # SEP-28k Stutter Classification — Complete Experiment Log
-**All 40 Experiments | What We Did | What We Got | Final Conclusions**
+**All 42 Experiments | What We Did | What We Got | Final Conclusions**
 
 Dataset: SEP-28k (Apple) | Task: Multi-label stutter-type classification (Block, Prolongation, SoundRep, WordRep, Interjection)  
 Primary Metric: **Macro-F1** (higher = better) | Evaluation: Speaker-independent (LOSO fold0)
 
 ---
 
-## ⚡ Quick Leaderboard (Top 10 of 40)
+## ⚡ Quick Leaderboard (Top 10 of 42)
 
 | Rank | Exp | Method | Macro-F1 | AUPRC |
 |------|-----|--------|----------|-------|
-| 🥇 1 | **C4** | HuBERT × Whisper Cross-Attention Fusion | **0.6587** | **0.7459** |
-| 🥈 2 | **D7** | HuBERT + Whisper Atrous-CNN | 0.6494 | 0.7261 |
+| 🥇 1 | **G2** | Pure Ensemble: C4 + D7 (threshold=0.40) | **0.6753** | **0.7479** |
+| 🥈 2 | **C4** | HuBERT × Whisper Cross-Attention Fusion | 0.6587 | 0.7459 |
 | 🥉 3 | **E5** | HuBERT + Whisper Graph Transformer | 0.6528 | 0.7354 |
-| 4 | **D6** | HuBERT + MFCC TDNN | 0.5848 | 0.6475 |
-| 5 | **F3** | GRL Speaker Disentanglement CNN | 0.5399 | 0.6271 |
-| 6 | **D3** | SE-ResNet1D + BiLSTM | 0.5503 | 0.5833 |
-| 7 | **C3** | Multi-SSL Temporal Concat Transformer | 0.5674 | — |
-| 8 | **C5** | Whisper + HuBERT BiLSTM Fusion | 0.6282 | 0.6548 |
-| 9 | **E2** | Dynamic GAT (4-head) | 0.5153 | 0.6184 |
+| 4 | **D7** | HuBERT + Whisper Atrous-CNN | 0.6494 | 0.7261 |
+| 5 | **C5** | Whisper + HuBERT BiLSTM Fusion | 0.6282 | 0.6548 |
+| 6 | **G1** | Improved Ensemble (soft labels + augment) | 0.6000 | 0.6343 |
+| 7 | **D6** | HuBERT + MFCC TDNN | 0.5848 | 0.6475 |
+| 8 | **C3** | Multi-SSL Temporal Concat Transformer | 0.5674 | — |
+| 9 | **D3** | SE-ResNet1D + BiLSTM | 0.5503 | 0.5833 |
 | 10 | **D1** | 4-block Conformer + MLSM | 0.5477 | 0.6016 |
 
 ---
@@ -624,20 +624,21 @@ Applied feature-level augmentation: Gaussian jitter (σ=0.01), random scale (±1
 |--------|------|----------|---------|-------------|
 | **A** | Layer Analysis | A5 (0.564) | 0.564 | Layer 9 is canonical; conv aggregation beats gating |
 | **B** | Dim Reduction | B5 VAE (0.473) | 0.490 (PCA) | PCA-32 wins; ICA/AE fail |
-| **C** | Feature Fusion | C4 (0.659) | **0.6587** | HuBERT × Whisper XAttn = CHAMPION |
+| **C** | Feature Fusion | C4 (0.659) | **0.6587** | HuBERT × Whisper XAttn = previous champion |
 | **D** | Deep Models | D7 (0.649) | 0.6494 | Conformer+conv critical; Atrous+dual-stream 2nd best |
 | **E** | Graph Models | E5 (0.653) | 0.6528 | GAT > GCN > ST-GCN > HGNN; needs dual-stream |
 | **F** | Robustness | F3 (0.540) | 0.5399 | GRL speaker disentanglement; feature augment fails |
+| **G** | Ensemble | G2 (0.675) | **0.6753** ⭐ | Pure C4+D7 average beats all; retraining (G1) hurts |
 
 ### Per-Class All-Time Best F1
 
 | Stutter Type | Best F1 | Method | Exp |
 |---|---|---|---|
-| Block | **0.6531 (pre)** / 0.6023 F1 | HuBERT × Whisper XAttn | C4 |
-| Prolongation | **0.6128** | HuBERT + Whisper Atrous-CNN | D7 |
-| SoundRep | **0.6271** | HuBERT + Whisper Graph Transformer | E5 |
+| Block | **0.6357** | C4+D7 Pure Ensemble | G2 |
+| Prolongation | **0.6260** | C4+D7 Pure Ensemble | G2 |
+| SoundRep | **0.6327** | C4+D7 Pure Ensemble | G2 |
 | WordRep | **0.6949** | HuBERT × Whisper XAttn | C4 |
-| Interjection | **0.7868** | HuBERT × Whisper XAttn | C4 |
+| Interjection | **0.7928** | C4+D7 Pure Ensemble | G2 |
 
 ---
 
@@ -670,14 +671,15 @@ Standard BCE/CE training ignores rare stutter types (WordRep, SoundRep). Focal L
 
 | Approach | Components | Macro-F1 | Recommended For |
 |---|---|---|---|
-| **Research Best** | C4: HuBERT × Whisper Cross-Attention | **0.6587** | Highest accuracy |
+| **🏆 Overall Best** | G2: Pure C4+D7 Ensemble (threshold=0.40) | **0.6753** | Best accuracy, no retraining needed |
+| **Best Single Model** | C4: HuBERT × Whisper Cross-Attention | 0.6587 | Single-model deployment |
 | **Production Best** | F3 + D1: GRL + Conformer (combine in future) | ~0.60 est. | Generalisation |
 | **Clinical Pipeline** | D5 Multi-task (detect + type) | AUROC=0.811 | Screening first stage |
 | **Lightweight** | B1+F1: PCA-32 + CNN + Focal Loss | 0.5497 | CPU deployment |
 
 ### The One-Line Summary  
-> **A cross-attention fusion of HuBERT-large and Whisper-large (C4) achieves Macro-F1=0.659 — the best stutter classification result in this project. The key insight is that acoustic SSL models (HuBERT) and linguistic ASR models (Whisper) encode complementary and non-redundant stutter features that, when combined via cross-attention on the SEP-28k dataset, produce all-time best F1 across all 5 stutter types simultaneously.**
+> **A pure weighted ensemble of the two best models — C4 (HuBERT × Whisper Cross-Attention) and D7 (HuBERT + Whisper Atrous-CNN) — achieves Macro-F1=0.6753 (G2), the all-time best result in this project. The key insight is that model diversity (cross-attention vs dilated-CNN) provides complementary predictions, and simple probability averaging at threshold=0.40 outperforms any single architectural improvement or retraining attempt.**
 
 ---
 
-*Generated: 2026-04-10 | Project: SEP-28k Stutter Classification | Experiments: A1-A8, B1-B8, C1-C6, D1-D8, E1-E5, F1-F5 (40 total)*
+*Generated: 2026-04-10 | Updated: 2026-05-02 | Project: SEP-28k Stutter Classification | Experiments: A1-A8, B1-B8, C1-C6, D1-D8, E1-E5, F1-F5, G1-G2 (42 total)*
