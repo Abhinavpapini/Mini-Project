@@ -289,7 +289,7 @@ Concatenated features from two Wav2Vec2-base models (primary + benchmark-w2v2-ba
 
 ---
 
-### Exp C4 — Cross-Attention SSL Fusion: HuBERT × Whisper ⭐ ALL-TIME CHAMPION
+### Exp C4 — Cross-Attention SSL Fusion: HuBERT × Whisper ⭐ BEST SINGLE MODEL
 **What We Did:**  
 Fused **HuBERT-large Layer 21** (1024-dim, self-supervised) with **Whisper-large Layer 28** (1280-dim, ASR-supervised) using **bidirectional cross-attention** (8 heads × 32-dim per head). Both streams query each other simultaneously. MLP classifier on the 512-dim joint representation.
 
@@ -305,7 +305,7 @@ Fused **HuBERT-large Layer 21** (1024-dim, self-supervised) with **Whisper-large
 | **Macro** | **0.6587** | **0.7190** | **0.6087** | **0.7459** |
 
 - **+0.119 over previous champion F3** — unprecedented gap
-- All 5 stutter types achieve all-time best simultaneously
+- All 5 stutter types achieve all-time best simultaneously *(later surpassed by G2 ensemble)*
 - Best epoch = 3 (severe overfitting after → needs regularisation)
 
 **Why it works:**
@@ -315,7 +315,7 @@ Fused **HuBERT-large Layer 21** (1024-dim, self-supervised) with **Whisper-large
 - WordRep: Whisper detects repeated word-boundary patterns HuBERT can't see
 - Interjection: Whisper explicitly models "um/uh" as linguistic tokens
 
-**Conclusion:** **C4 is the project champion.** The combination of complementary-objective SSL models (acoustic masking vs linguistic ASR) is the decisive breakthrough. Cross-attention is superior to simple concatenation for capturing inter-modal interactions.
+**Conclusion:** **C4 is the best single model in the project.** The combination of complementary-objective SSL models (acoustic masking vs linguistic ASR) is the decisive breakthrough. Cross-attention is superior to simple concatenation for capturing inter-modal interactions. *(G2 pure ensemble later exceeded this by +0.017 using C4+D7 probability averaging.)*
 
 ---
 
@@ -468,12 +468,12 @@ TDNN with dilations [1,1,2,2,1] + Statistics Pooling, fed with concatenated HuBE
 Atrous/Dilated CNN (dilations [1,2,4,8,16]) with Dual Pooling (mean + max) on **concatenated HuBERT-large L21 + Whisper-large L28** features (1024+1280=2304-dim).
 
 **What We Got:**
-- Macro-F1 = **0.6494** — **Rank #2 overall in entire project**
-- Prolongation F1 = **0.6128** — ALL-TIME BEST ever for Prolongation
+- Macro-F1 = **0.6494** — **Rank #4 overall** *(after G2, C4, E5)*
+- Prolongation F1 = **0.6128** — ALL-TIME BEST ever for Prolongation *(single-model record, G2 overall got 0.6260)*
 - WordRep F1 = 0.6882
 - Best epoch = 2 (very fast convergence/early stopping critical)
 
-**Conclusion:** HuBERT+Whisper with Atrous-CNN is the second-best method overall, just barely below C4's cross-attention. The dual-pool structure captures both average energy (mean) and peak activations (max) for the stutter signal. The Atrous dilation scales naturally to different stutter durations.
+**Conclusion:** HuBERT+Whisper with Atrous-CNN is the **4th-best method overall** and the best pure-CNN dual-stream model. The dual-pool structure captures both average energy (mean) and peak activations (max) for the stutter signal. The Atrous dilation scales naturally to different stutter durations. *(Used as one of two components in the G2 ensemble that achieved the all-time best.)*
 
 ---
 
@@ -554,7 +554,7 @@ Applied a Graph Transformer (k-NN=8, adjacency bias β=1.0) on **concatenated Hu
 **What We Got:**
 - Macro-F1 = **0.6528** — **Rank #3 overall**
 - SoundRep F1 = **0.6271** — ALL-TIME BEST for Sound Repetition
-- AUPRC = **0.7354** (2nd highest ever)
+- AUPRC = **0.7354** (2nd highest single-model ever, after G2=0.7479)
 - Most informative graph model in the project
 
 **Conclusion:** HuBERT+Whisper Graph Transformer is exceptional — combining the two complementary SSL streams in a graph structure that models inter-sample acoustic similarity produces state-of-the-art results. **SoundRep benefit is unique** — the graph captures rapid syllable-repetition neighbouring patterns.
@@ -646,8 +646,8 @@ Applied feature-level augmentation: Gaussian jitter (σ=0.01), random scale (±1
 
 ### What We Discovered (In Priority Order)
 
-**1. Complementary SSL Models are the Decisive Factor**  
-Combining HuBERT-large (acoustic masking pre-training) with Whisper-large (ASR pre-training) in a cross-attention fusion (C4) gives the best result: **Macro-F1 = 0.6587**, a +0.119 improvement over the previous champion. HuBERT captures acoustic stuttering patterns; Whisper captures linguistic boundary information. Their combination is non-redundant and synergistic.
+**1. Complementary SSL Models + Ensembling are the Decisive Factors**  
+Combining HuBERT-large (acoustic masking pre-training) with Whisper-large (ASR pre-training) in a cross-attention fusion (C4) gives Macro-F1 = 0.6587. Simply averaging C4 and D7 probability outputs (G2) pushes this further to **Macro-F1 = 0.6753**, the all-time best. HuBERT captures acoustic stuttering patterns; Whisper captures linguistic boundary information. Their combination is non-redundant and synergistic.
 
 **2. Speaker Bias Must Be Actively Removed**  
 The dataset is dominated by one podcast (WomenWhoStutter = 43.8%). Without adversarial speaker disentanglement (F3-GRL), models learn speaker/show identity as a shortcut, not stutter acoustics. F3 raised Macro-F1 to 0.540 using only basic CNN, proving speaker generalisation is a core bottleneck.
