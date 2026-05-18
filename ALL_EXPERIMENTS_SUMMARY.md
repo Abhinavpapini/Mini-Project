@@ -628,8 +628,68 @@ Applied feature-level augmentation: Gaussian jitter (σ=0.01), random scale (±1
 | **D** | Deep Models | D7 (0.649) | 0.6494 | Conformer+conv critical; Atrous+dual-stream 2nd best |
 | **E** | Graph Models | E5 (0.653) | 0.6528 | GAT > GCN > ST-GCN > HGNN; needs dual-stream |
 | **F** | Robustness | F3 (0.540) | 0.5399 | GRL speaker disentanglement; feature augment fails |
-| **G** | Ensemble | G2 (0.675) | **0.6753** ⭐ | Pure C4+D7 average beats all; retraining (G1) hurts |
+| **G** | Ensemble / Advanced | G2 (0.675) | **0.6753** ⭐ | Pure C4+D7 average beats all; retraining (G1) hurts |
+| **G3** | Layer-wise Probing + Gumbel | G3 (0.382) | 0.3821† | New task: 6-class single-label with Fluent class |
 
+†Not directly comparable to G1/G2 (different task setup: 6-class single-label vs 5-class multi-label)
+
+---
+
+## Phase Post-42 — New Task Experiments (G3-series)
+
+### Exp G3 — Multi-SSL Layer-wise Probing + Per-Subtype Gumbel Layer Selection (SEP-28k 6-class)
+
+**What We Did:**
+Implemented the full pipeline from Batra et al. (EUSIPCO 2025), adapted for SEP-28k (no FluencyBank).
+
+**Stage 1 — LR Probing:**
+- Probed 11 cached layers across 2 SSL models (HuBERT-large: 6 layers, Whisper-large: 5 layers)
+- Selected top-5 layers per model by macro-F1 probe score
+- HuBERT-large best layer: **L21** (macro-F1=0.373) | Whisper-large best layer: **L31** (macro-F1=0.413)
+
+**Stage 2 — G3 Neural Model (GPU):**
+- WeightedLayerSum per model (α initialized from LR probe scores, learned jointly)
+- CNN-1D backbone over M=2 model streams (kernel=1 for M≤2)
+- GumbelClassRouter: per-class Gumbel-Softmax gates over M=2 streams (τ annealed 2.0→0.5)
+- Per-class output heads → 6-class softmax (CrossEntropyLoss + inverse-freq class weights)
+
+**Task Adaptation (SEP-28k → 6-class single-label):**
+- Multi-label → Single-label: Priority Block > Interjection > Prolongation > SoundRep > WordRep > Fluent
+- 6 classes: Block(42.4%) | Prolongation(10.1%) | SoundRep(3.5%) | WordRep(3.4%) | Interjection(21.1%) | Fluent(19.6%)
+
+**What We Got:**
+
+| Class | F1 | Precision | Recall |
+|---|---|---|---|
+| Block | 0.4790 | 0.6239 | 0.3887 |
+| Prolongation | 0.3063 | 0.2851 | 0.3310 |
+| SoundRep | 0.1560 | 0.1308 | 0.1931 |
+| WordRep | 0.2731 | 0.2846 | 0.2624 |
+| Interjection | 0.5440 | 0.4739 | 0.6386 |
+| Fluent | 0.5339 | 0.4739 | 0.6112 |
+| **Macro** | **0.3821** | 0.3787 | 0.4042 |
+
+- Accuracy: **46.8%** (6-class)
+- Best epoch: 40 (still slightly improving — not fully converged)
+
+**Gumbel Hard Model Selections (what the model learned):**
+- **HuBERT-large** preferred for: Block, Prolongation, SoundRep (acoustic/phonetic stutter types)
+- **Whisper-large** preferred for: WordRep, Interjection, Fluent (linguistic boundary types)
+- Layer weights roughly uniform (all 5 layers contribute) — no single dominant layer
+
+**Important Notes:**
+- G3 Macro-F1=0.382 is **NOT comparable to G2's 0.6753** — completely different task
+  - G2: 5-class multi-label (sigmoid) on stutter-only clips
+  - G3: 6-class single-label (softmax) including Fluent class
+- Only 2 SSL models available (wav2vec2-large and wavlm-large caches missing)
+  - Full 4-model version (+ wav2vec2-large + wavlm-large) would likely improve results
+- The Gumbel selection confirms prior findings: HuBERT=acoustic, Whisper=linguistic
+
+**Conclusion:** G3 successfully validates the layer-wise probing + Gumbel selection pipeline on SEP-28k. The per-class model routing is semantically meaningful. Minority classes (SoundRep=0.156, WordRep=0.273) remain hard — a known bottleneck. With all 4 SSL models cached and more epochs, performance should improve significantly. **Experiment archived; Gumbel routing findings support the C4/D7 complementarity hypothesis.**
+
+---
+
+*Generated: 2026-04-10 | Updated: 2026-05-18 | Project: SEP-28k Stutter Classification | Experiments: A1-A8, B1-B8, C1-C6, D1-D8, E1-E5, F1-F5, G1-G3 (43 total)*
 ### Per-Class All-Time Best F1
 
 | Stutter Type | Best F1 | Method | Exp |

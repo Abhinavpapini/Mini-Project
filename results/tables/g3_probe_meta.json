@@ -1,0 +1,54 @@
+{
+  "n_samples": 20906,
+  "n_train": 16724,
+  "n_test": 4182,
+  "seed": 42,
+  "test_size": 0.2,
+  "top_k": 5,
+  "class_names": [
+    "Block",
+    "Prolongation",
+    "SoundRep",
+    "WordRep",
+    "Interjection",
+    "Fluent"
+  ],
+  "models": {
+    "hubert-large": {
+      "top_layers": [
+        6,
+        12,
+        18,
+        21,
+        23
+      ],
+      "init_weights": [
+        0.32351,
+        0.36113,
+        0.35853,
+        0.37273,
+        0.3585
+      ]
+    },
+    "whisper-large": {
+      "top_layers": [
+        8,
+        16,
+        24,
+        28,
+        31
+      ],
+      "init_weights": [
+        0.31823,
+        0.32757,
+        0.3712,
+        0.40495,
+        0.41349
+      ]
+    }
+  },
+  "features_root": "artifacts\\features",
+  "fold": "fold0",
+  "clips_root": "ml-stuttering-events-dataset\\clips",
+  "sep_labels": "ml-stuttering-events-dataset\\SEP-28k_labels.csv"
+}

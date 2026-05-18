@@ -1,0 +1,69 @@
+{
+  "experiment": "G3",
+  "title": "Multi-SSL Layer-wise Probing + Gumbel Layer Selection",
+  "dataset": "SEP-28k (6-class single-label, no FluencyBank)",
+  "models": [
+    "hubert-large",
+    "whisper-large"
+  ],
+  "top_k": 5,
+  "d_model": 256,
+  "n_params": 1122844,
+  "tau_start": 2.0,
+  "tau_end": 0.5,
+  "epochs": 40,
+  "best_epoch": 40,
+  "best_macro_f1": 0.38492331904390503,
+  "test_results": {
+    "accuracy": 0.4679579148732664,
+    "macro_f1": 0.3820578274994047,
+    "micro_f1": 0.4679579148732664,
+    "macro_pre": 0.3787090099073855,
+    "macro_rec": 0.4041832941168191,
+    "f1_Block": 0.4790003471017008,
+    "pre_Block": 0.6238698010849909,
+    "rec_Block": 0.38873239436619716,
+    "f1_Prolongation": 0.3063457330415755,
+    "pre_Prolongation": 0.285132382892057,
+    "rec_Prolongation": 0.3309692671394799,
+    "f1_SoundRep": 0.15598885793871867,
+    "pre_SoundRep": 0.1308411214953271,
+    "rec_SoundRep": 0.19310344827586207,
+    "f1_WordRep": 0.2730627306273063,
+    "pre_WordRep": 0.2846153846153846,
+    "rec_WordRep": 0.2624113475177305,
+    "f1_Interjection": 0.5440464666021297,
+    "pre_Interjection": 0.47386172006745364,
+    "rec_Interjection": 0.6386363636363637,
+    "f1_Fluent": 0.5339028296849974,
+    "pre_Fluent": 0.47393364928909953,
+    "rec_Fluent": 0.6112469437652812
+  },
+  "gumbel_hard_selections": {
+    "Block": 0,
+    "Prolongation": 0,
+    "SoundRep": 0,
+    "WordRep": 1,
+    "Interjection": 1,
+    "Fluent": 1
+  },
+  "layer_weights": {
+    "hubert-large": [
+      0.18973729014396667,
+      0.19172412157058716,
+      0.20415030419826508,
+      0.21809813380241394,
+      0.19629016518592834
+    ],
+    "whisper-large": [
+      0.19822843372821808,
+      0.18311163783073425,
+      0.18960228562355042,
+      0.20858868956565857,
+      0.22046895325183868
+    ]
+  },
+  "checkpoint": "artifacts\\checkpoints\\G3\\g3_best.pt",
+  "baseline_G2": 0.6753,
+  "vs_G2": -0.29324
+}
