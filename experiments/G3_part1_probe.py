@@ -1,6 +1,4 @@
 """G3 Part 1: Layer-wise LR probing (SEP-28k)."""
-Outputs are consumed by G3_part2_model.py.
-"""
 from __future__ import annotations
 
 import argparse

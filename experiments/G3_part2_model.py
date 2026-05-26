@@ -42,8 +42,11 @@ def parse_args() -> argparse.Namespace:
     p.add_argument("--batch-size",   type=int,  default=256)
     p.add_argument("--lr",           type=float,default=3e-4)
     p.add_argument("--weight-decay", type=float,default=1e-4)
-    p.add_argument("--amp",          action="store_true", default=True,
+    p.add_argument("--amp", dest="amp", action="store_true",
                    help="Use automatic mixed precision (faster on GPU)")
+    p.add_argument("--no-amp", dest="amp", action="store_false",
+                   help="Disable automatic mixed precision")
+    p.set_defaults(amp=True)
     p.add_argument("--out-dir",      type=Path, default=Path("results/tables"))
     p.add_argument("--fig-dir",      type=Path, default=Path("results/figures"))
     p.add_argument("--ckpt-dir",     type=Path, default=Path("artifacts/checkpoints/G3"))
@@ -513,7 +516,7 @@ def main() -> None:
             feat_batches = [f.to(device) for f in feat_batches]
             yb = yb.to(device)
             optimizer.zero_grad()
-            with torch.amp.autocast(device_type="cuda", enabled=use_amp):
+            with torch.amp.autocast(device_type=device.type, enabled=use_amp):
                 logits = model(feat_batches, tau=tau, hard=False)
             loss = criterion(logits.float(), yb)
             scaler.scale(loss).backward()
@@ -536,7 +539,7 @@ def main() -> None:
                 *feat_batches, yb = batch
                 feat_batches = [f.to(device) for f in feat_batches]
                 yb = yb.to(device)
-                with torch.amp.autocast(device_type="cuda", enabled=use_amp):
+                with torch.amp.autocast(device_type=device.type, enabled=use_amp):
                     logits = model(feat_batches, tau=tau, hard=True)
                 vl_loss += criterion(logits.float(), yb).item() * yb.size(0)
                 all_preds.append(logits.argmax(1).cpu().numpy())
@@ -564,7 +567,10 @@ def main() -> None:
 
     # ── 9. Final evaluation on best checkpoint ────────────────────────────────
     print(f"\n[6] Loading best checkpoint (macro_f1={best_macro_f1:.5f}) ...")
-    model.load_state_dict(torch.load(best_ckpt, map_location=device, weights_only=True))
+    state = torch.load(best_ckpt, map_location=device)
+    if isinstance(state, dict) and "state_dict" in state:
+        state = state["state_dict"]
+    model.load_state_dict(state)
     model.eval()
     all_preds, all_true = [], []
     with torch.no_grad():
@@ -640,8 +646,10 @@ def main() -> None:
 
     # ── 11. Plots ─────────────────────────────────────────────────────────────
     try:
-        import matplotlib; matplotlib.use("Agg")
-        import matplotlib.pyplot as plt
+        import importlib
+        matplotlib = importlib.import_module("matplotlib")
+        matplotlib.use("Agg")
+        plt = importlib.import_module("matplotlib.pyplot")
 
         ep_x = [r["epoch"] for r in history]
         best_ep = int(np.argmax([r["val_macro_f1"] for r in history]))
