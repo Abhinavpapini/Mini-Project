@@ -1,217 +1,75 @@
-G3 EXPERIMENT REPORT
-====================
+G3 Experiment Report
 
-Experiment ID: G3
-Title: Multi-SSL Layer-wise Probing + Per-Subtype Gumbel Layer Selection (SEP-28k 6-class)
-Status: DONE
-Run Ref: g3_sep28k_001
-Date Logged: 2026-05-18
-Scripts: experiments/G3_part1_probe.py + experiments/G3_part2_model.py
+Experiment: G3 — Multi-SSL layer probes + per-class Gumbel routing
+Date: 2026-05-18
+Scripts: `experiments/G3_part1_probe.py`, `experiments/G3_part2_model.py`
 
-Objective
----------
-Implement the layer-wise probing + Gumbel-Softmax layer selection pipeline
-(inspired by Batra et al., EUSIPCO 2025), adapted to SEP-28k only (no FluencyBank).
+What we tried
+- Transform SEP-28k multi-label labels into a single 6-class task
+- Probe each cached SSL layer with logistic regression, pick top-5 layers
+- For each model: learn a softmax-weighted sum of those top layers
+- Combine model streams with a small 1D-CNN and use a per-class Gumbel
+  Softmax to route which model is used for each class
 
-Pipeline:
-  Stage 1 — LR probing across all cached layers per SSL model
-             → identify best layers + initialize layer weights
-  Stage 2 — WeightedLayerSum (learnable α from probe scores)
-             → CNN-1D over model streams
-             → GumbelClassRouter (per-class, τ annealed 2.0→0.5)
-             → 6-class single-label softmax head
+Data and setup
+- Dataset: SEP-28k (labels only)
+- Samples: 20,906 (train 16,724 / test 4,182, stratified)
+- Classes: Block, Prolongation, SoundRep, WordRep, Interjection, Fluent
+- Models used: `hubert-large`, `whisper-large` (other two planned models had no cached features)
+- Top-K layers: 5 per model, projection dim: 256, epochs: 40, batch size: 256
 
-Task Adaptation: SEP-28k multi-label → 6-class single-label
-  Priority: Block > Interjection > Prolongation > SoundRep > WordRep > Fluent
-  Classes: Block | Prolongation | SoundRep | WordRep | Interjection | Fluent
+Stage 1 — Layer probes (logistic regression)
+- HuBERT best layer: L21 (top-5: 6,12,18,21,23). Best probe macro-F1 ≈ 0.373
+- Whisper best layer: L31 (top-5: 8,16,24,28,31). Best probe macro-F1 ≈ 0.413
 
-Data and Setup
---------------
-Dataset        : SEP-28k (Apple) — labels only, no FluencyBank
-Task           : 6-class single-label classification (NEW task vs prior experiments)
-N Samples      : 20,906
-Train Split    : 16,724  (80%, seed=42, stratified)
-Test Split     :  4,182  (20%)
-SSL Models     : HuBERT-large (6 cached layers) + Whisper-large (5 cached layers)
-                 wav2vec2-large + wavlm-large: NO CACHE — skipped
-Top-K layers   : 5 per model
-d_model        : 256
-Epochs         : 40
-Batch Size     : 256
-Learning Rate  : 3e-4 (AdamW + CosineAnnealing)
-Hardware       : GPU (CUDA + AMP fp16)
-Runtime        : ~15 min (Part 1: ~5 min CPU | Part 2: ~10 min GPU)
+Stage 2 — G3 training
+- Architecture: per-model WeightedLayerSum → per-model linear projection → CNN-1D →
+  per-class Gumbel router → per-class heads. Total params ≈ 1.12M
+- Training: 40 epochs, τ annealed 2.0 → 0.5
+- Best validation macro-F1: 0.3849 (epoch 40)
 
-Class Distribution (full dataset)
------------------------------------
-  Block          :  8,874  (42.4%)
-  Interjection   :  4,401  (21.1%)
-  Fluent         :  4,090  (19.6%)
-  Prolongation   :  2,116  (10.1%)
-  SoundRep       :    722  ( 3.5%)
-  WordRep        :    703  ( 3.4%)
+Final test results (best checkpoint)
+- Accuracy: 0.468
+- Macro-F1: 0.382
 
--------------------------------------------------------------------
-STAGE 1 — LR PROBE RESULTS (layer-wise macro-F1)
--------------------------------------------------------------------
+Per-class F1 (test)
+- Block: 0.479
+- Prolongation: 0.306
+- SoundRep: 0.156
+- WordRep: 0.273
+- Interjection: 0.544
+- Fluent: 0.534
 
-HuBERT-large (6 layers probed):
-  Layer   1  :  Macro-F1 = 0.29237
-  Layer   6  :  Macro-F1 = 0.32351
-  Layer  12  :  Macro-F1 = 0.36113
-  Layer  18  :  Macro-F1 = 0.35853
-  Layer  21  :  Macro-F1 = 0.37273  <- BEST
-  Layer  23  :  Macro-F1 = 0.35850
+What the model learned
+- Gumbel routing picks HuBERT for acoustic/phonetic classes (Block, Prolongation, SoundRep)
+  and Whisper for word/boundary/linguistic classes (WordRep, Interjection, Fluent).
+- Learned layer weights are fairly uniform across the top-5 layers; L21 (HuBERT)
+  and L31 (Whisper) are slightly strongest.
 
-  Top-5 selected (by probe F1): L6, L12, L18, L21, L23
-  Best layer: L21 — consistent with all prior HuBERT-large experiments (C4, D7, G2)
+Why the macro-F1 is relatively low
+1) Task is harder than prior experiments — we moved from a 5-class multi-label
+   setup to a 6-class single-label softmax (added the Fluent class). Macro-F1
+   averages all classes equally, so minority classes hurt the average.
+2) Severe class imbalance — SoundRep and WordRep have very few samples (~700 each).
+3) Only two SSL models were available for this run (wav2vec2-large and wavlm-large
+   were skipped because their feature caches were missing). That reduces representational diversity.
+4) Training was still slowly improving at epoch 40; running longer (60–80 epochs)
+   would likely improve scores.
 
-Whisper-large (5 layers probed):
-  Layer   8  :  Macro-F1 = 0.31823
-  Layer  16  :  Macro-F1 = 0.32757
-  Layer  24  :  Macro-F1 = 0.37120
-  Layer  28  :  Macro-F1 = 0.40495
-  Layer  31  :  Macro-F1 = 0.41349  <- BEST
+Recommendations / next steps
+- Cache features for `wav2vec2-large` and `wavlm-large` and re-run the full 4-model setup.
+- Try stronger imbalance handling (focal loss, class-specific augmentation) for SoundRep/WordRep.
+- Sweep more layers (not only top-5) so the WeightedLayerSum has more diverse choices.
+- Train longer (60–80 epochs) to reach fuller convergence.
 
-  Top-5 selected (all 5 available): L8, L16, L24, L28, L31
-  Best layer: L31 — note: prior experiments used L28; L31 slightly better for this 6-class task
+Artifacts produced
+- `artifacts/checkpoints/G3/g3_best.pt`
+- `results/tables/g3_probe_scores.csv`, `g3_top_layers.csv`, `g3_probe_meta.json`
+- `results/tables/g3_train_history.csv`, `g3_perclass_results.csv`, `g3_run_report.json`
+- Plots: `results/figures/g3_layer_curves.png`, `g3_results.png`, `g3_gumbel_heatmap.png`
 
-Probe Insight:
-  Whisper-large consistently outperforms HuBERT-large as a linear probe for this
-  6-class single-label task (0.413 vs 0.373). The Fluent class detection benefits
-  from Whisper's ASR-aligned representations more than HuBERT's acoustic masking.
+Notes
+- This run is logged as Experiment 43. It establishes a baseline for the
+  6-class single-label formulation; it's not directly comparable to the
+  earlier 5-class multi-label experiments.
 
--------------------------------------------------------------------
-STAGE 2 — G3 MODEL TRAINING RESULTS
--------------------------------------------------------------------
-
-Model Architecture:
-  WeightedLayerSum x2    (α init from probe F1, learned jointly)
-  LinearProjection x2    (HuBERT: 1024→256, Whisper: 1280→256)
-  CNN-1D (k=1, M=2)      (kernel=1 used since M=2 streams)
-  GumbelClassRouter      ([6 classes, 2 models] gate matrix)
-  Per-class heads x6     (256 → 128 → 1 each)
-  Total Parameters       : 1,122,844
-
-Training Log (macro-F1 per epoch):
-  epoch=01  τ=1.962  macro_f1=0.21490
-  epoch=05  τ=1.812  macro_f1=0.32876
-  epoch=10  τ=1.625  macro_f1=0.35461
-  epoch=15  τ=1.438  macro_f1=0.37068
-  epoch=19  τ=1.288  macro_f1=0.37890
-  epoch=25  τ=1.062  macro_f1=0.37253
-  epoch=28  τ=0.950  macro_f1=0.38079
-  epoch=29  τ=0.913  macro_f1=0.38102
-  epoch=34  τ=0.725  macro_f1=0.38475
-  epoch=38  τ=0.575  macro_f1=0.38381
-  epoch=40  τ=0.500  macro_f1=0.38492  <- Best (last epoch)
-
-Best checkpoint: epoch 40  |  best val Macro-F1 = 0.38492
-
-Test Results (best checkpoint, 6-class single-label)
-------------------------------------------------------
-  Accuracy   : 0.46796
-  Macro-F1   : 0.38206
-  Micro-F1   : 0.46796
-  Macro-Pre  : 0.37871
-  Macro-Rec  : 0.40418
-
-Per-class Results:
-  +------------------+--------+---------+--------+
-  | Class            | F1     | Prec    | Recall |
-  +------------------+--------+---------+--------+
-  | Block            | 0.4790 | 0.6239  | 0.3887 |
-  | Prolongation     | 0.3063 | 0.2851  | 0.3310 |
-  | SoundRep         | 0.1560 | 0.1308  | 0.1931 |
-  | WordRep          | 0.2731 | 0.2846  | 0.2624 |
-  | Interjection     | 0.5440 | 0.4739  | 0.6386 |
-  | Fluent           | 0.5339 | 0.4739  | 0.6112 |
-  +------------------+--------+---------+--------+
-  | MACRO            | 0.3821 | 0.3787  | 0.4042 |
-  +------------------+--------+---------+--------+
-
-Gumbel Hard Model Selection (learned per class):
-  Block           → HuBERT-large   (acoustic phonetic pattern)
-  Prolongation    → HuBERT-large   (sustained phonation)
-  SoundRep        → HuBERT-large   (rapid syllable repetition)
-  WordRep         → Whisper-large  (word-level boundary repetition)
-  Interjection    → Whisper-large  (filler word detection, linguistic)
-  Fluent          → Whisper-large  (fluent speech = ASR-aligned)
-
-Learned Layer Weights (softmax α — after training):
-  HuBERT-large  : L6=0.190  L12=0.192  L18=0.204  L21=0.218  L23=0.196
-  Whisper-large : L8=0.198  L16=0.183  L24=0.190  L28=0.209  L31=0.220
-
-  Note: Weights are roughly uniform — all 5 top layers contribute similarly.
-  L21 (HuBERT) and L31 (Whisper) have the highest weights, consistent with
-  LR probe rankings from Stage 1.
-
--------------------------------------------------------------------
-KEY FINDINGS
--------------------------------------------------------------------
-1. GUMBEL ROUTING IS SEMANTICALLY MEANINGFUL:
-   The model independently learned the same HuBERT/Whisper split that
-   prior experiments (C4, D7) found manually:
-   - HuBERT → acoustic/phonetic stutter types (Block, Prolongation, SoundRep)
-   - Whisper → linguistic/boundary types (WordRep, Interjection, Fluent)
-   This validates the complementarity hypothesis from scratch via gradient learning.
-
-2. LAYER 21 (HuBERT) AND L31 (Whisper) REMAIN CANONICAL:
-   Stage 1 probing on the 6-class task confirms the same optimal layers
-   found in all prior multi-label experiments. Layer selection is robust
-   across task formulations.
-
-3. MINORITY CLASSES REMAIN THE BOTTLENECK:
-   SoundRep F1=0.156 and WordRep F1=0.273 are significantly worse than
-   majority classes. With only 722 and 703 samples respectively, even
-   weighted sampling cannot fully compensate. A focal loss or data
-   augmentation strategy is needed for these types.
-
-4. UNIFORM LAYER WEIGHTS = MORE LAYERS NEEDED:
-   The near-uniform α weights suggest the model cannot clearly distinguish
-   which of the 5 top layers is best — likely because the layer differences
-   are small within the top-5 range. A wider sweep (e.g., all 24 HuBERT layers)
-   would give more diverse layer choices and sharper learned weights.
-
-5. MODEL IS NOT FULLY CONVERGED AT EPOCH 40:
-   val Macro-F1 was still slowly increasing at epoch 40 (0.383 → 0.385).
-   Running 60-80 epochs would likely yield ~0.40+ Macro-F1.
-
--------------------------------------------------------------------
-COMPARISON NOTE
--------------------------------------------------------------------
-⚠ G3 is NOT directly comparable to G1/G2:
-  - G2: 5-class MULTI-LABEL (sigmoid + MLSM) — stutter-only clips
-  - G3: 6-class SINGLE-LABEL (softmax + CE) — includes Fluent class
-  Macro-F1 of 0.382 on a 6-class single-label task with heavy class
-  imbalance is a reasonable baseline for this new task formulation.
-
-If reformulated as 5-class multi-label (same as G2), G3 would be
-directly comparable. That remains as future work.
-
--------------------------------------------------------------------
-ARTIFACTS SAVED
--------------------------------------------------------------------
-  Checkpoint      : artifacts/checkpoints/G3/g3_best.pt
-  Probe Scores    : results/tables/g3_probe_scores.csv
-  Top-K Layers    : results/tables/g3_top_layers.csv
-  Probe Meta      : results/tables/g3_probe_meta.json
-  Per-class CSV   : results/tables/g3_perclass_results.csv
-  Train History   : results/tables/g3_train_history.csv
-  Run Report JSON : results/tables/g3_run_report.json
-  Layer Curves    : results/figures/g3_layer_curves.png
-  Training Plots  : results/figures/g3_results.png
-  Gumbel Heatmap  : results/figures/g3_gumbel_heatmap.png
-  This Report     : results/experiment_reports/G3.txt
-
-Promotion Decision
-------------------
-G3 is LOGGED as Experiment 43. It introduces a new task (6-class single-label
-with Fluent) and confirms prior architectural findings via learned Gumbel routing.
-Not directly comparable to G1/G2 leaderboard — treated as a separate branch.
-
-Future extensions:
-  - Cache wav2vec2-large + wavlm-large layers for full 4-model G3 run
-  - Use Focal Loss for SoundRep/WordRep minority class recovery
-  - Extend to 60-80 epochs for full convergence
-  - Reformulate as 5-class multi-label to enable G2 comparison

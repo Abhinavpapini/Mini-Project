@@ -1,26 +1,4 @@
-"""G3 — Part 1: Layer-wise LR Probing (SEP-28k, 6-class single-label).
-
-WHAT THIS FILE DOES
--------------------
-1. Loads SEP-28k labels and converts multi-label → single-label (6 classes).
-   Classes: 0=Block  1=Prolongation  2=SoundRep  3=WordRep  4=Interjection  5=Fluent
-   Priority: Block > Interjection > Prolongation > SoundRep > WordRep > Fluent
-
-2. Discovers cached layer .npy files for every configured SSL model alias.
-
-3. Sweeps every available layer for every model:
-   - Loads [N, D] features
-   - Trains a Logistic Regression probe (max_iter=300)
-   - Records macro-F1 and per-class F1 per layer
-
-4. Saves:
-   results/tables/g3_probe_scores.csv   — per-model, per-layer scores
-   results/tables/g3_top_layers.csv     — top-K layers per model
-   results/figures/g3_layer_curves.png  — F1 vs layer index per model
-
-Run:
-    python experiments/G3_part1_probe.py --top-k 5
-
+"""G3 Part 1: Layer-wise LR probing (SEP-28k)."""
 Outputs are consumed by G3_part2_model.py.
 """
 from __future__ import annotations
@@ -37,9 +15,7 @@ from sklearn.metrics import f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Constants
-# ──────────────────────────────────────────────────────────────────────────────
 STUTTER_TYPES = ["Block", "Prolongation", "SoundRep", "WordRep", "Interjection"]
 CLASS_NAMES   = ["Block", "Prolongation", "SoundRep", "WordRep", "Interjection", "Fluent"]
 # Priority order for single-label conversion (index into STUTTER_TYPES)
@@ -54,9 +30,7 @@ DEFAULT_MODELS: List[Tuple[str, int]] = [
 ]
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # CLI
-# ──────────────────────────────────────────────────────────────────────────────
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="G3 Part-1: Multi-SSL Layer Probing")
     p.add_argument("--features-root", type=Path,
@@ -80,9 +54,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Label loading — multi-label → 6-class single-label
-# ──────────────────────────────────────────────────────────────────────────────
 def norm(x: object) -> str:
     return str(x).strip()
 
@@ -124,9 +96,7 @@ def sorted_clip_keys(clips_root: Path) -> List[Tuple[str, str, str]]:
     return keys
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # SSL cache utilities
-# ──────────────────────────────────────────────────────────────────────────────
 def find_layer_folder(features_root: Path, alias: str, fold: str) -> Optional[Path]:
     """Find the folder that contains layer_N.npy files for a given alias."""
     direct = features_root / alias / fold
@@ -159,9 +129,7 @@ def load_layer(layer_folder: Path, layer_idx: int) -> np.ndarray:
     return arr.astype(np.float32)
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # LR Probing
-# ──────────────────────────────────────────────────────────────────────────────
 def probe_layer(
     X_tr: np.ndarray,
     X_te: np.ndarray,
@@ -189,9 +157,7 @@ def probe_layer(
     return macro_f1, out
 
 
-# ──────────────────────────────────────────────────────────────────────────────
 # Main
-# ──────────────────────────────────────────────────────────────────────────────
 def main() -> None:
     args = parse_args()
     args.out_dir.mkdir(parents=True, exist_ok=True)

@@ -1,33 +1,4 @@
-"""G3 — Part 2: Weighted-Sum + Gumbel-Softmax Router + CNN-1D (GPU).
-
-READS:  results/tables/g3_probe_meta.json  (written by G3_part1_probe.py)
-TRAINS: G3Model on GPU, evaluates 6-class single-label classification.
-
-ARCHITECTURE
-------------
-For each SSL model m (M models total):
-  1. WeightedLayerSum_m   : learnable softmax-α over top-K layer features
-                            α initialized from LR probe macro-F1 scores
-                            output: [B, D_m]
-  2. Projection_m         : Linear → LayerNorm → GELU  → [B, d_model]
-
-Stack M streams → [B, M, d_model]
-
-CNN-1D backbone          : treats M model streams as a 1D sequence
-                            Conv1d(d_model, d_model, 3) × 2 residual blocks
-                            output: [B, M, d_model]
-
-GumbelClassRouter        : for each class c, learnable logits g_c ∈ R^M
-                            Gumbel-Softmax (τ annealed 2.0→0.5 over epochs)
-                            class_feat_c = Σ_m Gumbel(g_c)[m] × cnn_out[:,m,:]
-                            output: [B, n_classes, d_model]
-
-Per-class heads          : Linear(d_model → d_model//2) → GELU → Linear → scalar
-                            → logits [B, n_classes]  → CrossEntropyLoss
-
-Run:
-    python experiments/G3_part2_model.py --epochs 40 --batch-size 256
-"""
+"""G3 Part 2: Gumbel layer selector + CNN-1D training."""
 from __future__ import annotations
 
 import argparse
@@ -55,9 +26,7 @@ STUTTER_TYPES = ["Block", "Prolongation", "SoundRep", "WordRep", "Interjection"]
 PRIORITY      = [0, 4, 1, 2, 3]   # Block > Interjection > Prolongation > SoundRep > WordRep
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # CLI
-# ─────────────────────────────────────────────────────────────────────────────
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="G3 Part-2: Gumbel Layer Selector + CNN-1D")
     p.add_argument("--meta-json",    type=Path,
@@ -81,9 +50,7 @@ def parse_args() -> argparse.Namespace:
     return p.parse_args()
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Data utilities
-# ─────────────────────────────────────────────────────────────────────────────
 def norm(x: object) -> str:
     return str(x).strip()
 
@@ -163,9 +130,7 @@ def compute_sample_weights(y: np.ndarray, n_classes: int) -> np.ndarray:
     return class_weights[y]
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Model components
-# ─────────────────────────────────────────────────────────────────────────────
 
 class WeightedLayerSum(nn.Module):
     """Learnable softmax-weighted sum over K layers.
@@ -359,9 +324,7 @@ class G3Model(nn.Module):
         return out
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Evaluation helper
-# ─────────────────────────────────────────────────────────────────────────────
 def evaluate(y_true: np.ndarray, y_pred: np.ndarray) -> Dict[str, float]:
     m: Dict[str, float] = {}
     m["accuracy"]  = float(accuracy_score(y_true, y_pred))
@@ -394,9 +357,7 @@ def print_results(label: str, m: Dict[str, float]) -> None:
               f"P={m[f'pre_{name}']:.4f}  R={m[f'rec_{name}']:.4f}")
 
 
-# ─────────────────────────────────────────────────────────────────────────────
 # Main — data loading, training loop, evaluation, saving
-# ─────────────────────────────────────────────────────────────────────────────
 def main() -> None:
     args = parse_args()
     for d in (args.out_dir, args.fig_dir, args.ckpt_dir):
